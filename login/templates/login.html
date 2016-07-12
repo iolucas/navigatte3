@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content-area %}
+
+    {% if login_error %}
+        <p><strong>Sorry, that's not a valid username or password</strong></p><br>
+    {% endif %}
+
+    <form action="" method="post">
+        {% csrf_token %}
+        <label for="username">User name:</label>
+        <input type="text" name="username" value="" id="username">
+        <br><br>
+        <label for="password">Password:</label>
+        <input type="password" name="password" value="" id="password">
+        <br><br>
+        <input type="submit" value="Login" />
+    </form>
+
+{% endblock %}
