@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content-area %}
+
+<h2>Add New Subject</h2>
+
+<form method="post">
+
+    {% csrf_token %}
+    <!--BEST IS TO PIN SOME BLOCK AND IN CASE SOME DO NOT EXIST THEY CREATE, JUST LIKE FACEBOOK PAGES CREATION TO DO NOT INDUCE USERS
+    TO CREATE PAGES THAT ALREADY EXISTS-->
+    <input name="subject_name" placeholder="Name" type="text">
+    <br><br>
+    <input type="submit" value="Create">
+
+</form>
+
+{% if result_detail %}
+    <h3>{{ result_detail }}</h3>
+{% endif %}
+
+
+
+{% endblock %}
