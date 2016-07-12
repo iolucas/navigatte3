@@ -1,24 +1,24 @@
 {% extends "base.html" %}
 
-{% block block-area %}
+{% block content-area %}
 
-<div class="container">
-    <h2>Add New Block</h2>
-  <div class="row">
-    <form class="col s12" method="post" action="{% url 'blocks_add' %}">
-      {% csrf_token %}
-      <div class="row">
-<!--BEST IS TO PIN SOME BLOCK AND IN CASE SOME DO NOT EXIST THEY CREATE, JUST LIKE FACEBOOK PAGES CREATION TO DO NOT INDUCE USERS
-TO CREATE PAGES THAT ALREADY EXISTS-->
-        <div class="input-field col s12">
-          <input id="block_name" type="text" class="validate">
-          <label for="block_name">Block Name</label>
-        </div>
+<h2>Add New Block</h2>
 
-        <input type="submit" value="Create"/>
+<form method="post">
 
-      </div>
-    </form>
-  </div>
-  </div>
+    {% csrf_token %}
+    <!--BEST IS TO PIN SOME BLOCK AND IN CASE SOME DO NOT EXIST THEY CREATE, JUST LIKE FACEBOOK PAGES CREATION TO DO NOT INDUCE USERS
+    TO CREATE PAGES THAT ALREADY EXISTS-->
+    <input name="block_name" placeholder="Name" type="text">
+    <br><br>
+    <input type="submit" value="Create">
+
+</form>
+
+{% if result_detail %}
+    <h3>{{ result_detail }}</h3>
+{% endif %}
+
+
+
 {% endblock %}
