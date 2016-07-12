@@ -33,7 +33,10 @@ ALLOWED_HOSTS = ['192.168.0.109']
 # Application definition
 
 INSTALLED_APPS = [
-    'blocks',
+    #'blocks',
+    'subjects',
+    'register',
+    'login',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
