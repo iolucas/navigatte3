@@ -1,37 +1,65 @@
 # Create your views here.
 
-from django.shortcuts import render
+from django.http import HttpResponse
+
+from django.shortcuts import render, redirect
 from django.views import generic
 
 from .models import Block
 
-#def index(request):
-    #return render(request, 'blocks/blocks-area.html')
-
-class IndexView(generic.ListView):
-    template_name = 'blocks/blocks-area.html'
-    context_object_name = 'block_list'
-
-    def get_queryset(self):
-
-        """
-        Return the all the block objects
-        """
-        return Block.objects.all()
+#Decorators for verification whether the user is logged in to use the view
+from django.contrib.auth.decorators import login_required, user_passes_test
 
 
-#View for add new blocks
-#class AddFormView(generic.TemplateView):
-    #template_name = 'blocks/blocks-add.html'
 
-#View to handle new block post
-class AddView(generic.FormView):
-    template_name = 'blocks/blocks-add.html'
+def loginCheck(user):
+    return user.is_authenticated()
 
-def addBlock(request):
-    if request.method == 'POST':
+@user_passes_test(loginCheck, login_url="/login/")
+def blocksDisplay(request):
+    return render(request, 'blocks/blocks-area.html', {'block_list': Block.objects.all()})
+
+
+@user_passes_test(loginCheck, login_url="/login/")
+def blockAdd(request):
+
+    result_detail = None
+
+    #Check whether a block_name var has been sent
+    if 'block_name' in request.POST:
         
-        newBlock = Block(block_name='lucas123', block_description='ae1234567')
-        newBlock.save()
+        #If so, check if it is not empty
+        if request.POST['block_name']:
+            newBlock = Block(name=request.POST['block_name']) #Create a new block
+            newBlock.save() #Register new block
+            result_detail = 'Block created successfully.' #Set success msg
+        else:
+            result_detail = 'Error: Empty block name.' #Set block name empty msg
 
-    return render(request, 'blocks/blocks-add.html')
+    #Return the result template
+    return render(request, 'blocks/blocks-add.html', { 'result_detail': result_detail })
+
+@user_passes_test(loginCheck, login_url="/login/")
+def blockDetails(request):
+    if 'id' in request.GET and request.GET['id']:
+
+        try:
+            block_details = Block.objects.get(id=request.GET['id'])
+
+            return render(request, 'blocks/block-details.html', { 
+                'name': block_details.name, 
+                'books': block_details.books.all(),
+                'courses': block_details.courses.all(),    
+                'websites': block_details.websites.all(),           
+            })
+
+        except Block.DoesNotExist:
+            return HttpResponse("Block not found")
+
+    else: #If no id, return the blocks list
+        return redirect('blocks_index')
+
+
+
+
+    

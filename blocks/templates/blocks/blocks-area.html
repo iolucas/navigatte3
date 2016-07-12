@@ -1,36 +1,18 @@
 {% extends "base.html" %}
 
-{% block block-area %}
-<div class="row">
-    {% for block in block_list %}
-        <!--<div class="panel panel-default">
-            <div class="panel-heading">{{ block.name }}</div>
-            <div class="panel-body">
-            {{ block.name }}
-            </div>
-        </div>-->
-
-
-        <div class="col s6 m4 l2">
-          <div class="card blue-grey darken-1 hoverable">
-            <div class="card-content white-text">
-              <span class="card-title truncate">{{ block.name }}</span>
-              <p class="hide hide-on-small-only">I am a very simple card. I am good at containing small bits of information.
-              I am convenient because I require little markup to use effectively.</p>
-            </div>
-            <div class="card-action">
-              <a href="#">Details</a>
-            </div>
-          </div>
-        </div>
-      
+{% block content-area %}
 
 
 
 
-    {% endfor %}
-    <div class="fixed-action-btn" style="bottom: 45px; right: 24px;">
-<a class="btn-floating btn-large waves-effect waves-light red" href="{% url 'blocks_add' %}"><i class="material-icons">add</i></a>
-</div>
-    </div>
+<a href="{% url 'blocks_add' %}">+ Add New Block</a>
+
+<br>
+
+<ul>
+  {% for block in block_list %}
+    <li><a href="{% url 'block_details' %}?id={{ block.id }}">{{ block.name }}</a></li>  
+  {% endfor %}
+</ul>
+
 {% endblock %}
