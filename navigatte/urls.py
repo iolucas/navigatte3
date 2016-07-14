@@ -17,8 +17,12 @@ from django.conf.urls import include, url
 from django.contrib import admin
 
 urlpatterns = [
+    #General options
     url(r'^admin/', admin.site.urls),
-    url(r'^subjects/', include('subjects.urls')),
     url(r'^register/', include('register.urls')),
     url(r'^login/', include('login.urls')),
+
+    #User related options
+    url(r'^(?P<userpage>\w+)/', include('user.urls')),
+    url(r'^(?P<userpage>\w+)/subjects/', include('subjects.urls')),
 ]
