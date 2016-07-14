@@ -1,0 +1,7 @@
+The home page will describe metrics, insights, timeline, this kind of stuff in the future
+
+the user page will show de user references and in case you are showing your page, you will be able to edit stuff
+
+must read about caching to store stuff right
+
+add user url
