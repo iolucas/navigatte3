@@ -23,7 +23,7 @@ def login(request):
             auth.login(request, user)
 
             #Get the next page to be redirected
-            next = request.GET.get('next', reverse('subjects_owner_display'))
+            next = request.GET.get('next', reverse('subjects_display', kwargs={'userpage': username}))
 
             # Redirect to the next page
             return redirect(next)
