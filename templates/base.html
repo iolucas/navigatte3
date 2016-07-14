@@ -8,8 +8,41 @@
         <title>Navigatte</title>
         <style>
 
+            html, body {
+                margin: 0;
+                height: 100%;
+                font-family: 'Calibri'
+            }
+
+            header {
+                background-color: #006064;
+                color: #84ffff;
+                height: 80px;
+                line-height: 80px;
+            }
+
+            #logo {
+                font-size: 30px;
+                margin-left: 20px;
+            }
+
+            #user {
+                font-size: 20px;
+                margin-right: 20px;
+                float: right;
+            }
+
+            #user a {
+                color: inherit;
+            }
+
             section {
                 font-size: 20px;
+                padding: 10px;
+            }
+
+            .subject-reference {
+                background-color: #ddd;
             }
 
         </style>
@@ -18,16 +51,15 @@
     <body>
 
         <header>
-            <h1>Navigatte</h1>
+            <span id="logo">Navigatte</span>
+            <span id="user">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'user_index' userpage=user.username %}">{{ user.username }}</a> | <a href="{% url 'logout_index' %}">Logout</a>
+                {% else %}
+                    <a href="{% url 'login_index' %}">Login</a> | <a href="{% url 'register_index' %}">Register</a> 
+                {% endif %}
+            </span>
         </header>
-        
-        {% if user.is_authenticated %}
-            <p>Welcome, {{ user.username }}. Thanks for logging in. <a href="{% url 'logout_index' %}">Logout</a></p>
-        {% else %}
-            <p>Welcome, new user. Please <a href="{% url 'login_index' %}">login</a>. </p>
-            <p>If you do not have an account, please <a href="{% url 'register_index' %}">register</a>.</p>
-        {% endif %}
-        <br>
 
         <section>
 
