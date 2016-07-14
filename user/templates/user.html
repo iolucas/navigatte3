@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content-area %}
+
+{% if user.is_authenticated %}
+    <p>Welcome, {{ user.username }}. Thanks for logging in. <a href="{% url 'logout_index' %}">Logout</a></p>
+{% else %}
+    <p>Welcome, new user. Please <a href="{% url 'login_index' %}">login</a>. </p>
+    <p>If you do not have an account, please <a href="{% url 'register_index' %}">register</a>.</p>
+{% endif %}
+
+{% endblock %}
