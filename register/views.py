@@ -10,7 +10,7 @@ def register(request):
         form = UserCreationForm(request.POST)
         if form.is_valid():
             new_user = form.save()
-            return redirect('subjects_owner_display')
+            return render(request, "register_successful.html")
     else:
         form = UserCreationForm()
 
