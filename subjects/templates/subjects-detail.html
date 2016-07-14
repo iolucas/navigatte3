@@ -2,35 +2,57 @@
 
 {% block content-area %}
 
-    <h3>Subject Details</h3>
-    <h4>{{name}}</h4>
-    <br>
+    <h1>{{name}} References</h1>
 
-    {% if courses %}
+    <div class="subject-reference">
         <h3>Courses</h3>
+        {% if isOwner %}
+            <form method="post" action="{% url 'subjects_reference_add' userpage=userpage %}">
+                {% csrf_token %}
+                <input type="text" placeholder="Name" name="course_name">
+                <input type="hidden" name="subject_id" value="{{subject_id}}">
+                <input type="submit" value="Add">
+            </form>
+        {% endif %}
         <ul>
         {% for course in courses %}
             <li>{{course.name}}</li>    
         {% endfor %}
         </ul>
-    {% endif %}
+    </div>
 
-    {% if books %}
+    <div class="subject-reference">
         <h3>Books</h3>
+        {% if isOwner %}
+            <form method="post" action="{% url 'subjects_reference_add' userpage=userpage %}">
+                {% csrf_token %}
+                <input type="text" placeholder="Name" name="book_title">
+                <input type="hidden" name="subject_id" value="{{subject_id}}">
+                <input type="submit" value="Add">
+            </form>
+        {% endif %}
         <ul>
         {% for book in books %}
             <li>{{book.name}}</li>    
         {% endfor %}
         </ul>
-    {% endif %}
+    </div>
 
-    {% if websites %}
+    <div class="subject-reference">
         <h3>Websites</h3>
+        {% if isOwner %}
+            <form method="post" action="{% url 'subjects_reference_add' userpage=userpage %}">
+                {% csrf_token %}
+                <input type="text" placeholder="Name" name="website_address">
+                <input type="hidden" name="subject_id" value="{{subject_id}}">
+                <input type="submit" value="Add">
+            </form>
+        {% endif %}
         <ul>
         {% for website in websites %}
             <li>{{website.name}}</li>    
         {% endfor %}
         </ul>
-    {% endif %}
+    </div>
 
 {% endblock %}

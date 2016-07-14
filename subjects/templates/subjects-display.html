@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content-area %}
+
+<h1>Subjects</h1>
+
+{% if isOwner %}
+  <a href="{% url 'subjects_add' userpage=userpage %}">+ Add New Subject</a>
+{% endif %}
+
+<ul>
+  {% for subject in subject_list %}
+    <li><a href="{% url 'subjects_detail' userpage=userpage %}?id={{ subject.id }}">{{ subject.name }}</a></li>  
+  {% endfor %}
+</ul>
+
+{% endblock %}
