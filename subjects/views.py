@@ -32,8 +32,9 @@ def subjectsDisplay(request, userpage):
     #return the request userpage, signaling whether this user is the owner or not
 
     #userpage is the current userpage displayed
+    #Get all the subjects that are not deleted
     return render(request, 'subjects-display.html', {
-        'subject_list': userpageRef.subject_set.all(),
+        'subject_list': userpageRef.subject_set.filter(deleted=False),
         'userpage': userpage,
         'isOwner': userpageRef == request.user,
     })
@@ -77,11 +78,12 @@ def subjectsDetail(request, userpage):
         try:
             subject_details = Subject.objects.get(id=request.GET['id'])
 
+            #Get all the references that have not the delete flag set
             return render(request, 'subjects-detail.html', { 
                 'name': subject_details.name, 
-                'books': subject_details.books.all(),
-                'courses': subject_details.courses.all(),    
-                'websites': subject_details.websites.all(),
+                'books': subject_details.books.filter(deleted=False),
+                'courses': subject_details.courses.filter(deleted=False),    
+                'websites': subject_details.websites.filter(deleted=False),
                 'subject_id': request.GET['id'], 
                 'userpage': userpage,
                 'isOwner': userpageRef == request.user,         
@@ -97,10 +99,8 @@ def subjectsDetail(request, userpage):
 @user_passes_test(loginCheck, login_url="/login/")
 def subjectsReferenceAdd(request, userpage):
     if not "subject_id" in request.POST:
-        if settings.DEBUG:
-            return HttpResponse("Invalid reference add request. No subjectID in POST method.")
-        else:
-            return HttpResponse("Invalid Request")
+        return invalidRequest("Invalid reference add request. No subjectID in POST method.")
+
     
     subjectId = request.POST["subject_id"]
 
@@ -110,10 +110,7 @@ def subjectsReferenceAdd(request, userpage):
 
         #If the target object owner is not the current user, finish with error
         if request.user != targetSubject.owner:
-            if settings.DEBUG:
-                return HttpResponse("Invalid reference add request. The target user owner of the subject is not the authenticated user.")
-            else:
-                return HttpResponse("Invalid Request")
+            return invalidRequest("Invalid reference add request. The target user owner of the subject is not the authenticated user.")
 
         #check which reference is being add
         if "course_name" in request.POST:
@@ -140,12 +137,66 @@ def subjectsReferenceAdd(request, userpage):
         return redirect(reverse('subjects_detail', kwargs={'userpage': userpage}) + "?id=" + subjectId)
 
     except Exception as e:
-        if settings.DEBUG:
-            return HttpResponse("Invalid reference add request. Exception: " + str(e))
-        else:
-            return HttpResponse("Invalid Request")
-        
+        return invalidRequest("Invalid reference add request. Exception: " + str(e))
 
 
+#View to handle subject delete
+def subjectDelete(request, userpage):
+    if request.method != 'POST':
+        return HttpResponse("Invalid Request")
 
+    #If a subject_id field is present and is valid (not empty)
+    if 'subject_id' in request.POST and request.POST['subject_id']:
+
+        try:
+            targetSubject = Subject.objects.get(id=request.POST['subject_id'])
+
+            #Verifies if this subject does belongs to this user
+            if request.user != targetSubject.owner:
+                return invalidRequest("Invalid Delete. This subject does not belong to the signed in user.")
+
+            #If it is the owner, set delete flag in the object and return subjects page
+            targetSubject.deleted = True
+            targetSubject.save()
+
+            return redirect("subjects_display", userpage=userpage)
+
+        except Exception as e:
+            return invalidRequest("Error while deleting: " + str(e))
+
+    return invalidRequest("No subject id or invalid subject id send.")
+
+#View to handle subject reference delete
+def subjectReferenceDelete(request, userpage):
+    if request.method != 'POST':
+        return HttpResponse("Invalid Request")
+
+    #If a subject_id field is present and is valid (not empty)
+    if 'subject_id' in request.POST and request.POST['subject_id']:
+
+        try:
+            targetSubject = Subject.objects.get(id=request.POST['subject_id'])
+
+            #Verifies if this subject does belongs to this user
+            if request.user != targetSubject.owner:
+                return invalidRequest("Invalid Delete. This subject does not belong to the signed in user.")
+
+            #If it is the owner, set delete flag in the object and return subjects page
+            targetSubject.deleted = True
+            targetSubject.save()
+
+            return redirect("subjects_display", userpage=userpage)
+
+        except Exception as e:
+            return invalidRequest("Error while deleting: " + str(e))
+
+    return invalidRequest("No subject id or invalid subject id send.")
+
+
+def invalidRequest(debugMsg, nonDebugMsg = "Invalid Request"):
+    if settings.DEBUG:
+        return HttpResponse(debugMsg) 
+
+    return HttpResponse(nonDebugMsg) 
+       
     

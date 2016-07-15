@@ -13,12 +13,19 @@
                 <input type="hidden" name="subject_id" value="{{subject_id}}">
                 <input type="submit" value="Add">
             </form>
+            <br>
         {% endif %}
-        <ul>
-        {% for course in courses %}
-            <li>{{course.name}}</li>    
-        {% endfor %}
-        </ul>
+        
+        {% if not courses %}
+            No course to display.
+        {% else %}
+            <ul>
+                {% for course in courses %}
+                    <li>{{course.name}}</li>    
+                {% endfor %}
+            </ul>
+        {% endif %}
+
     </div>
 
     <div class="subject-reference">
@@ -30,12 +37,18 @@
                 <input type="hidden" name="subject_id" value="{{subject_id}}">
                 <input type="submit" value="Add">
             </form>
+            <br>
         {% endif %}
-        <ul>
-        {% for book in books %}
-            <li>{{book.name}}</li>    
-        {% endfor %}
-        </ul>
+
+        {% if not books %}
+            No book to display.
+        {% else %}
+            <ul>
+                {% for book in books %}
+                    <li>{{book.name}}</li>    
+                {% endfor %}
+            </ul>
+        {% endif %}
     </div>
 
     <div class="subject-reference">
@@ -47,12 +60,36 @@
                 <input type="hidden" name="subject_id" value="{{subject_id}}">
                 <input type="submit" value="Add">
             </form>
+            <br>
         {% endif %}
-        <ul>
-        {% for website in websites %}
-            <li>{{website.name}}</li>    
-        {% endfor %}
-        </ul>
+        
+        {% if not websites %}
+            No website to display.
+        {% else %}
+            <ul>
+            {% for website in websites %}
+                <li>{{website.name}}</li> 
+                {% if isOwner %}
+                    <form method="post" action="{% url 'subjects_reference_add' userpage=userpage %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="reference_id" value="{{subject_id}}">
+                        <input type="submit" value="Delete">
+                        check if we set the delete flag or just remove it from the reference list
+                    </form>
+                {% endif %}   
+            {% endfor %}
+            </ul>
+        {% endif %}
     </div>
+
+    {% if isOwner %}
+        <br>
+        <br>
+        <form action="{% url 'subjects_delete' userpage=userpage %}" method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="subject_id" value="{{subject_id}}">
+            <input type="submit" value="Delete Subject">
+        </form>
+    {% endif %}
 
 {% endblock %}

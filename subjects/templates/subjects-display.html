@@ -6,12 +6,21 @@
 
 {% if isOwner %}
   <a href="{% url 'subjects_add' userpage=userpage %}">+ Add New Subject</a>
+  <br>
 {% endif %}
 
-<ul>
-  {% for subject in subject_list %}
-    <li><a href="{% url 'subjects_detail' userpage=userpage %}?id={{ subject.id }}">{{ subject.name }}</a></li>  
-  {% endfor %}
-</ul>
+{% if subject_list %}
+
+  <ul>
+    {% for subject in subject_list %}
+        <li><a href="{% url 'subjects_detail' userpage=userpage %}?id={{ subject.id }}">{{ subject.name }}</a></li>
+    {% endfor %}
+  </ul>
+
+{% else %}
+  <br>
+  <span>No subject to display.</span>
+
+{% endif %}
 
 {% endblock %}
