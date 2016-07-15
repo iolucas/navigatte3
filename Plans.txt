@@ -3,3 +3,9 @@ The home page will describe metrics, insights, timeline, this kind of stuff in t
 the user page will show de user references and in case you are showing your page, you will be able to edit stuff
 
 must read about caching to store stuff right
+
+USER INHERITANCE FOR REFERENCES DISPLAY ON TEMPLATES
+
+check how permissions works on django. maybe we can use it
+
+must start to make tests
