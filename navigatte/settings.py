@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 
 import os
 
-#from secretkey import getSecret
+from .secretkey import getSecret
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -22,18 +22,17 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/1.9/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'z_)djpy2t(u_c$omq)@fj_rh+kuuni_nnh(prdw$21zpjr&t%9'#getSecret()
+SECRET_KEY = getSecret()
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.0.109']
+ALLOWED_HOSTS = ["127.0.0.1", "192.168.0.109"]
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    #'blocks',
     'subjects',
     'register',
     'login',

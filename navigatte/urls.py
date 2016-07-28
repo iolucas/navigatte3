@@ -23,6 +23,6 @@ urlpatterns = [
     url(r'^login/', include('login.urls')),
 
     #User related options
-    url(r'^(?P<userpage>\w+)/', include('user.urls')),
-    url(r'^(?P<userpage>\w+)/subjects/', include('subjects.urls')),
+    #url(r'^(?P<userpage>\w+)/', include('user.urls')),
+    url(r'^(?P<userpage>\w+)/', include('subjects.urls')),
 ]
