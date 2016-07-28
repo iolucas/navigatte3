@@ -62,7 +62,7 @@
             <span id="logo">Navigatte</span>
             <span id="user">
                 {% if user.is_authenticated %}
-                    <a href="{% url 'user_index' userpage=user.username %}">{{ user.username }}</a> | <a href="{% url 'logout_index' %}">Logout</a>
+                    <a href="{% url 'subjects_display' userpage=user.username %}">{{ user.username }}</a> | <a href="{% url 'logout_index' %}">Logout</a>
                 {% else %}
                     <a href="{% url 'login_index' %}">Login</a> | <a href="{% url 'register_index' %}">Register</a> 
                 {% endif %}
@@ -70,7 +70,7 @@
         </header>
 
         <section>
-
+            <center><h1>{{userpage}}'s Page</h1></center>    
             {% block content-area %}
             {% endblock %}
 
