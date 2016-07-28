@@ -21,7 +21,16 @@
         {% else %}
             <ul>
                 {% for course in courses %}
-                    <li>{{course.name}}</li>    
+                    <li>{{course.name}}</li>
+                        {% if isOwner %}
+                            <form method="post" action="{% url 'subjects_reference_delete' userpage=userpage %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="subject_id" value="{{subject_id}}">
+                                <input type="hidden" name="reference_type" value="course">
+                                <input type="hidden" name="reference_id" value="{{course.id}}">
+                                <input type="submit" value="Delete">
+                            </form>
+                        {% endif %}       
                 {% endfor %}
             </ul>
         {% endif %}
@@ -45,7 +54,16 @@
         {% else %}
             <ul>
                 {% for book in books %}
-                    <li>{{book.name}}</li>    
+                    <li>{{book.name}}</li>
+                        {% if isOwner %}
+                            <form method="post" action="{% url 'subjects_reference_delete' userpage=userpage %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="subject_id" value="{{subject_id}}">
+                                <input type="hidden" name="reference_type" value="book">
+                                <input type="hidden" name="reference_id" value="{{book.id}}">
+                                <input type="submit" value="Delete">
+                            </form>
+                        {% endif %}      
                 {% endfor %}
             </ul>
         {% endif %}
@@ -68,13 +86,14 @@
         {% else %}
             <ul>
             {% for website in websites %}
-                <li>{{website.name}}</li> 
+                <li><a href="{{website.name}}" target="_blank">{{website.name}}</a></li> 
                 {% if isOwner %}
-                    <form method="post" action="{% url 'subjects_reference_add' userpage=userpage %}">
+                    <form method="post" action="{% url 'subjects_reference_delete' userpage=userpage %}">
                         {% csrf_token %}
-                        <input type="hidden" name="reference_id" value="{{subject_id}}">
+                        <input type="hidden" name="subject_id" value="{{subject_id}}">
+                        <input type="hidden" name="reference_type" value="website">
+                        <input type="hidden" name="reference_id" value="{{website.id}}">
                         <input type="submit" value="Delete">
-                        check if we set the delete flag or just remove it from the reference list
                     </form>
                 {% endif %}   
             {% endfor %}

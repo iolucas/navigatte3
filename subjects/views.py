@@ -2,7 +2,7 @@
 
 from navigatte import settings
 
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseNotFound
 
 from django.shortcuts import render, redirect
 #from django.views import generic
@@ -20,6 +20,8 @@ from django.contrib.auth.models import User
 def loginCheck(user):
     return user.is_authenticated()
 
+
+
 #@user_passes_test(loginCheck, login_url="/login/")
 def subjectsDisplay(request, userpage):
 
@@ -27,7 +29,7 @@ def subjectsDisplay(request, userpage):
     try:
         userpageRef = User.objects.get_by_natural_key(username=userpage)
     except:
-        return HttpResponse("User not found.")   
+        return HttpResponseNotFound("User not found.")
 
     #return the request userpage, signaling whether this user is the owner or not
 
@@ -63,6 +65,8 @@ def subjectAdd(request, userpage):
         'result_detail': result_detail, 
         'userpage': userpage,
     })
+
+
 
 #@user_passes_test(loginCheck, login_url="/login/")
 def subjectsDetail(request, userpage):
@@ -113,19 +117,19 @@ def subjectsReferenceAdd(request, userpage):
             return invalidRequest("Invalid reference add request. The target user owner of the subject is not the authenticated user.")
 
         #check which reference is being add
-        if "course_name" in request.POST:
-            #Create new book (should be checked whether the desired exists before add a new)
+        if "course_name" in request.POST and request.POST["course_name"]:
             newCourse = Course(name=request.POST["course_name"])
             newCourse.save()
             #Add the new course to the target subject
             targetSubject.courses.add(newCourse)
 
-        elif "book_title" in request.POST:
+        elif "book_title" in request.POST and request.POST["book_title"]:
+            #Create new book (should be checked whether the desired exists before add a new)
             newBook = Book(name=request.POST["book_title"])
             newBook.save()
             targetSubject.books.add(newBook)
 
-        elif "website_address" in request.POST:
+        elif "website_address" in request.POST and request.POST["website_address"]:
             newWebsite = Website(name=request.POST["website_address"])
             newWebsite.save()
             targetSubject.websites.add(newWebsite)
@@ -138,6 +142,7 @@ def subjectsReferenceAdd(request, userpage):
 
     except Exception as e:
         return invalidRequest("Invalid reference add request. Exception: " + str(e))
+
 
 
 #View to handle subject delete
@@ -166,31 +171,66 @@ def subjectDelete(request, userpage):
 
     return invalidRequest("No subject id or invalid subject id send.")
 
+
+
 #View to handle subject reference delete
-def subjectReferenceDelete(request, userpage):
+#For now remove the reference from the subject, later set a remove flag and keeps record
+def subjectsReferenceDelete(request, userpage):
     if request.method != 'POST':
-        return HttpResponse("Invalid Request")
+        return invalidRequest("Invalid request. POST method expected.")
 
-    #If a subject_id field is present and is valid (not empty)
-    if 'subject_id' in request.POST and request.POST['subject_id']:
+    if not validateEntries(request.POST, ["subject_id", "reference_type", "reference_id"]):
+        return invalidRequest("Invalid request. subject_id, reference_type or reference_id missing or not valid.")
 
-        try:
-            targetSubject = Subject.objects.get(id=request.POST['subject_id'])
+    subjectId = request.POST['subject_id']
+    referenceType = request.POST['reference_type']
+    referenceId = request.POST['reference_id']
 
-            #Verifies if this subject does belongs to this user
-            if request.user != targetSubject.owner:
-                return invalidRequest("Invalid Delete. This subject does not belong to the signed in user.")
+    try:
+        #Get the target subject
+        targetSubject = Subject.objects.get(id=subjectId)
 
-            #If it is the owner, set delete flag in the object and return subjects page
-            targetSubject.deleted = True
-            targetSubject.save()
+        #Verifies if this subject does belongs to this user
+        if request.user != targetSubject.owner:
+            return invalidRequest("Invalid Delete. This subject does not belong to the signed in user.")
+        
+        #Get the target reference
+        if referenceType == "website":
+            targetReference = Website.objects.get(id=referenceId)
+            #remove the reference from the subject
+            targetSubject.websites.remove(targetReference)
 
-            return redirect("subjects_display", userpage=userpage)
+        elif referenceType == "book":
+            targetReference = Book.objects.get(id=referenceId)
+            #remove the reference from the subject
+            targetSubject.books.remove(targetReference)
+        
+        elif referenceType == "course":
+            targetReference = Course.objects.get(id=referenceId)
+            #remove the reference from the subject
+            targetSubject.courses.remove(targetReference)
+        else:
+            return invalidRequest("Invalid Delete. Invalid type: " + referenceType)
 
-        except Exception as e:
-            return invalidRequest("Error while deleting: " + str(e))
+        #save target subject
+        targetSubject.save()
 
-    return invalidRequest("No subject id or invalid subject id send.")
+        return redirect(reverse('subjects_detail', kwargs={'userpage': userpage}) + "?id=" + subjectId)
+
+    except Exception as e:
+        return invalidRequest("Error while deleting: " + str(e))
+
+
+
+def validateEntries(collection, entries, blankAllowed = False):
+    #iterate thru the entries
+    for entry in entries:
+        #if the entry does not exist, or is invalid (in case blankAllowed is false), return false
+        if not entry in collection or not (collection[entry] or blankAllowed):
+            return False
+        
+    return True
+
 
 
 def invalidRequest(debugMsg, nonDebugMsg = "Invalid Request"):
