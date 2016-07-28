@@ -11,3 +11,9 @@ check how permissions works on django. maybe we can use it
 MUST START CODE WITH THE TEST-DRIVEN APPROACH
 
 MUST CHANGE THE HTTP CODE FOR THE INVALID REQUEST RESPONSE FOR TESTS AND COMPLIANCES REQUIREMENTS
+
+read again about tests and start implement a test driven development
+
+verify where to put utils functions
+
+create continous integration system with auto test, deploy etc
