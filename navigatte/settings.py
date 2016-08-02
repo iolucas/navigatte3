@@ -12,8 +12,6 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 
 import os
 
-from .secretkey import getSecret
-
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -22,13 +20,37 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/1.9/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = getSecret()
+SECRET_KEY = os.environ['NVGTT_SECRET_KEY']
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+#If we are in production env
+if "BLUEMIX_REGION" in os.environ:
+    DEBUG = False
+else: #non production env
+    DEBUG = True
 
-ALLOWED_HOSTS = ["127.0.0.1", "192.168.0.109"]
+#Set allowed hosts for prod/dev enviraonemnt
+#If we are in production env
+if "BLUEMIX_REGION" in os.environ:
+    ALLOWED_HOSTS = ["nvgtt.mybluemix.net"]
+else: #non production env
+    ALLOWED_HOSTS = ["*"]
 
+
+#Security stuff
+
+#If we are in production env
+if "BLUEMIX_REGION" in os.environ:
+    
+    # Honor the 'X-Forwarded-Proto' header for request.is_secure()
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+#Register disable flag
+REGISTER_DISABLED = True
 
 # Application definition
 
@@ -79,12 +101,19 @@ WSGI_APPLICATION = 'navigatte.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#Database credentials populate
+import dj_database_url
+
+#If we are in production env
+if "BLUEMIX_REGION" in os.environ:
+    DATABASES = {'default': dj_database_url.config()}
+else: #non production env
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        }
     }
-}
 
 
 # Password validation
@@ -125,8 +154,13 @@ USE_TZ = True
 
 
 #static file directory inclusion
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR,'static'),
-]
+#STATICFILES_DIRS = [
+    #os.path.join(BASE_DIR,'static'),
+#]
+#Necessary for deploy on bluemix
+#For some reason, STATICFILES_DIRS does not work
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 STATIC_URL = '/static/'
+
+
