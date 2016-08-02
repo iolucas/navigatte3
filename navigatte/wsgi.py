@@ -11,6 +11,13 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
+from dj_static import Cling 
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "navigatte.settings")
 
-application = get_wsgi_application()
+#If production env
+if "BLUEMIX_REGION" in os.environ:
+    #Serve static files with gunicorn
+    application = Cling(get_wsgi_application())
+else: #if non production env
+    application = get_wsgi_application()
