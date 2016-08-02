@@ -1,0 +1,6 @@
+-Got in app switcher for dev/prod database (dev: sqlite3, prod: postgresql)
+-Got in app switcher for dev/prod http server (dev: django-builtin, prod: gunicorn)
+-Got in app switcher for dev/prod debug mode var (dev: true, prod: false)
+-Got in app switcher for dev/prod allowed hosts
+-Got in run bash migrate and test routines
+-Set SSL flags on settings on prod mode
