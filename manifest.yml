@@ -1,0 +1,9 @@
+applications:
+- path: .
+  memory: 128M
+  instances: 1
+  domain: mybluemix.net
+  name: nvgtt
+  host: nvgtt
+  disk_quota: 1024M
+  command: bash ./run.sh
