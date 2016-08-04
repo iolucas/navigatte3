@@ -55,15 +55,15 @@ REGISTER_DISABLED = True
 # Application definition
 
 INSTALLED_APPS = [
-    'subjects',
-    'register',
-    'login',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'subjects',
+    'register',
+    'login',
 ]
 
 MIDDLEWARE_CLASSES = [
