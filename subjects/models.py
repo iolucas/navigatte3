@@ -49,3 +49,14 @@ class Website(SubjectReference):
 
 class Course(SubjectReference):
     country = models.CharField(max_length=50, blank=True) 
+
+class Topic(models.Model):
+
+    title = models.CharField(max_length=200)
+    #short_description = models.TextField(blank=True)
+    #url = models.URLField(unique=True)
+    pageid = models.BigIntegerField(unique=True, default = -1)
+    #language = models.CharField(max_length=200, blank=True)
+
+    def __str__(self):
+        return self.title

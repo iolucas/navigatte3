@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content-area %}
+
+    <h1>Topics</h1>
+
+    <form action="" method="get">
+        <input type="text" name="search" value="" placeholder="Search..."s>
+        <input type="submit" value="Search" />
+    </form>
+
+    <br>
+
+    {% if not resultTopics and not noQuery %}
+        No were found.
+    {% else %}
+        {% for topic in resultTopics %}
+            <div style="background-color:#ddd;padding:10px;margin-bottom:15px">
+                <strong>{{topic.title}}</strong>
+                <form method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <input name="topic_url_title" type="hidden" value="{{topic.urlTitle}}">
+                    <input type="submit" value="Add">
+                </form>
+                <br>
+                <span>{{topic.description}}</span><br>
+                <a href="{{topic.url}}" target="_blank">{{topic.url}}</a>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+{% endblock %}

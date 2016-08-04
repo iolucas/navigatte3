@@ -7,7 +7,7 @@ from django.http import HttpResponse, HttpResponseNotFound
 from django.shortcuts import render, redirect
 #from django.views import generic
 
-from .models import Subject, Book, Website, Course
+from .models import Topic, Subject, Book, Website, Course
 
 #Decorators for verification whether the user is logged in to use the view
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -16,6 +16,9 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.urlresolvers import reverse
 
 from django.contrib.auth.models import User
+
+
+from . import wikipedia_api
 
 def loginCheck(user):
     return user.is_authenticated()
@@ -64,6 +67,43 @@ def subjectAdd(request, userpage):
     return render(request, 'subjects-add.html', { 
         'result_detail': result_detail, 
         'userpage': userpage,
+    })
+
+@user_passes_test(loginCheck, login_url="/login/")
+def newUserTopic(request, userpage):
+
+    #If it was a new topic to be added
+    if request.method == "POST" and 'topic_url_title' in request.POST and request.POST['topic_url_title']:
+        
+        queryResult = wikipedia_api.query(request.POST['topic_url_title'])
+        if queryResult == None:
+            return HttpResponse("Invalid request")
+        
+        #Try to get topic, if not found, create a new
+        try: 
+            topicReference = Topic.objects.get(pageid=queryResult['pageid'])
+        except Topic.DoesNotExist:
+            topicReference = Topic(title=queryResult['title'], pageid=queryResult['pageid'])
+            topicReference.save()
+
+        #Add to the current user a reference to this topic
+
+        return HttpResponse("Success")
+        
+
+
+    if not 'search' in request.GET or not request.GET['search']:
+        return render(request, "new-user-topic.html", {
+            'noQuery': True
+        })
+
+    resultObject = wikipedia_api.search(request.GET['search'])
+
+    if resultObject == None:
+        return HttpResponse("Error while completing the request.")
+
+    return render(request, "new-user-topic.html",{
+        'resultTopics': resultObject
     })
 
 
