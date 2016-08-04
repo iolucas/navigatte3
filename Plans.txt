@@ -17,3 +17,5 @@ read again about tests and start implement a test driven development
 verify where to put utils functions
 
 create continous integration system with auto test, deploy etc
+
+use wikipedia to create topics (topic must be in wikipedia)
