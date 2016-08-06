@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content-area %}
+
+<h1>Topics</h1>
+
+{% if isOwner %}
+  <a href="{% url 'add_new_user_topic' userpage=userpage %}">+ Add New Topic</a>
+  <br>
+{% endif %}
+
+{% if topic_list %}
+
+  <ul>
+    {% for topic in topic_list %}
+        <li><a href="{% url 'user_topic_details' userpage=userpage %}?id={{ topic.id }}">{{ topic }}</a></li>
+    {% endfor %}
+  </ul>
+
+{% else %}
+  <br>
+  <span>This user has no topics yet.</span>
+
+{% endif %}
+
+{% endblock %}

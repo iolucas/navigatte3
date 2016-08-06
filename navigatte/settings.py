@@ -52,6 +52,9 @@ if "BLUEMIX_REGION" in os.environ:
 #Register disable flag
 REGISTER_DISABLED = True
 
+#Login required url
+LOGIN_URL = "/login/"
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -61,6 +64,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'topics',
     'subjects',
     'register',
     'login',

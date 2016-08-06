@@ -21,8 +21,10 @@ urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^register/', include('register.urls')),
     url(r'^login/', include('login.urls')),
+    
 
     #User related options
     #url(r'^(?P<userpage>\w+)/', include('user.urls')),
-    url(r'^(?P<userpage>\w+)/', include('subjects.urls')),
+    url(r'^subjects/(?P<userpage>\w+)/', include('subjects.urls')),
+    url(r'^(?P<userpage>\w+)/', include('topics.urls')),
 ]
