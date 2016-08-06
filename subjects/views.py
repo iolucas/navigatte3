@@ -18,7 +18,7 @@ from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 
 
-from . import wikipedia_api
+from navigatte import wikipedia_api
 
 def loginCheck(user):
     return user.is_authenticated()
