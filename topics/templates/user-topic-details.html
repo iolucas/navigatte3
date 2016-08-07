@@ -42,7 +42,7 @@
         {% if isOwner %}
             <form method="post" action="{% url 'add_user_topic_reference' userpage=userpage %}">
                 {% csrf_token %}
-                <input type="text" placeholder="Name" name="book_title">
+                <input type="text" placeholder="Title" name="book_title">
                 <input type="hidden" name="subject_id" value="{{subject_id}}">
                 <input type="submit" value="Add">
             </form>
@@ -74,7 +74,7 @@
         {% if isOwner %}
             <form method="post" action="{% url 'add_user_topic_reference' userpage=userpage %}">
                 {% csrf_token %}
-                <input type="text" placeholder="Name" name="website_address">
+                <input type="text" placeholder="Address" name="website_address">
                 <input type="hidden" name="subject_id" value="{{subject_id}}">
                 <input type="submit" value="Add">
             </form>
