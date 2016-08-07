@@ -22,7 +22,8 @@ class GeneralTopic(models.Model):
     title = models.CharField(max_length=200)
     #short_description = models.TextField(blank=True)
     #url = models.URLField(unique=True)
-    pageid = models.BigIntegerField(unique=True, default = -1)
+    pageid = models.BigIntegerField(unique=True)
+    urlTitle = models.CharField(max_length=200, unique=True)
     #language = models.CharField(max_length=200, blank=True)
 
     def __str__(self):

@@ -5,6 +5,9 @@ from . import views
 urlpatterns = [
     url(r'^$', views.displayUserTopics, name='display_user_topics'),
     #url(r'^display-user-topics/', views.displayUserTopics, name='display_user_topics'),
+    #Start using topic url title as link
+    #url(r'^$', views.displayUserTopicsByName, name='display_user_topics'),
+    #subjects/(?P<userpage>\w+)/
     
     url(r'^add-new-user-topic/', views.addNewUserTopic, name='add_new_user_topic'),
     url(r'^user-topic-details/', views.userTopicDetails, name='user_topic_details'),

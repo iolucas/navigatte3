@@ -74,6 +74,7 @@ def query(queryTitle):
             return {
                 'title': pageObj["title"],
                 'pageid': pageObj["pageid"],
+                'urlTitle': queryTitle
             }
         
         raise Exception("Not results were returned from wikipedia api query. (Empty pages object)") 

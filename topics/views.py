@@ -35,7 +35,8 @@ def addNewUserTopic(request, userpage):
         try: 
             topicReference = GeneralTopic.objects.get(pageid=queryResult['pageid'])
         except GeneralTopic.DoesNotExist:
-            topicReference = GeneralTopic(title=queryResult['title'], pageid=queryResult['pageid'])
+            topicReference = GeneralTopic(title=queryResult['title'], 
+                                                pageid=queryResult['pageid'], urlTitle=queryResult['urlTitle'])
             topicReference.save()
 
         #Try to get this reference on the current user topics, if it does not exists, create a new
