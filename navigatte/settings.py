@@ -50,7 +50,7 @@ if "BLUEMIX_REGION" in os.environ:
     CSRF_COOKIE_SECURE = True
 
 #Register disable flag
-REGISTER_DISABLED = True
+REGISTER_DISABLED = False
 
 #Login required url
 LOGIN_URL = "/login/"
@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     'subjects',
     'register',
     'login',
+    'home',
 ]
 
 MIDDLEWARE_CLASSES = [

@@ -26,6 +26,7 @@ urlpatterns = [
     url(r'^register/', include('register.urls')),
     url(r'^login/', include('login.urls')),
     
+    url(r'^home/', include('home.urls')),
 
     #User related options
     #url(r'^(?P<userpage>\w+)/', include('user.urls')),
