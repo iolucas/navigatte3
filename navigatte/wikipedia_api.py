@@ -3,11 +3,11 @@ import json
 
 import requests
 
-from navigatte.settings import DEBUG
-
 from html.parser import HTMLParser
 
 import re
+
+DEBUG = True
 
 wikipediaApiSearchUrl = "https://en.wikipedia.org/w/api.php?action=opensearch&redirects=resolve&namespace=0&format=json&search="
 #use redirects=resolve to get actual pages that has been redirected
@@ -15,13 +15,39 @@ wikipediaApiQueryUrl = "https://en.wikipedia.org/w/api.php?action=query&format=j
 
 wikipediaArticleLinksUrl = ".wikipedia.org/w/api.php?action=query&redirects&pllimit=500&format=json&prop=links&titles="
 
-def search(queryString):
+wikipediaApiUrl = ".wikipedia.org/w/api.php"
+
+#Must create a valid language table
+
+def search2(searchString, lang="en"):
+    #Maybe implement later, open search performs better due to better abstract and not including useless titles
+    #https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=Java&utf8=&srprop=titlesnippet|size|wordcount|timestamp|snippet|redirecttitle|redirectsnippet|sectiontitle|sectionsnippet&srlimit=500&srinterwiki
+    return 0
+
+
+#read this later:https://www.mediawiki.org/wiki/API:Search_and_discovery
+#Open search returns the start string only results to use for autocompletition
+def search(searchString, lang="en"):
+
+    #Replace some things that are tecnically invalid to search
+    searchString = searchString.replace("#", " sharp ")
+
+
     #Get the wikipedia api query result in bytes
     try:
-        queryResult = urllib.request.urlopen(wikipediaApiSearchUrl + queryString).read()
+        #queryResult = urllib.request.urlopen(wikipediaApiSearchUrl + queryString).read()
 
         #Convert to json string and then to a python object
-        queryObj = json.loads(queryResult.decode("utf-8")) 
+        #queryObj = json.loads(queryResult.decode("utf-8"))
+        requestParams = {
+            'action': 'opensearch',
+            'redirects':'resolve',
+            'namespace':'0',
+            'format':'json',
+            'search': searchString
+        } 
+
+        queryObj = requests.get("https://" + lang + wikipediaApiUrl, params = requestParams).json()
 
         resultTitles = queryObj[1]  #Get the titles
         resultDescriptions = queryObj[2] #Get the descriptions
@@ -42,16 +68,18 @@ def search(queryString):
     resultObject = []
 
     for i in range(0, resultLength):
-        #Remove undesired results
+        #Remove undesired results that contents the following
         if " may refer to:" in resultDescriptions[i]:
             continue
 
         resultObject.append({
-            'title': resultTitles[i],
+            'title': resultTitles[i].replace("_", " "),
             'description': resultDescriptions[i],
             'url': resultUrls[i],
-            'urlTitle': resultUrls[i][30:] #Get the substring of the url that means its title
+            'urlTitle': resultUrls[i][30:] #Get the substring of the url that means its title.
         })
+
+        #Must use urltitle to avoid bugs in case of some symbols
 
     return resultObject
 
@@ -120,10 +148,11 @@ def baseQuery(request, lang):
 def query(queryTitle):
     #Get the wikipedia api query result in bytes
     try:
-        queryResult = urllib.request.urlopen(wikipediaApiQueryUrl + queryTitle).read()
+        #queryResult = urllib.request.urlopen(wikipediaApiQueryUrl + queryTitle).read()
 
         #Convert to json string and then to a python object
-        queryObj = json.loads(queryResult.decode("utf-8")) 
+        #queryObj = json.loads(queryResult.decode("utf-8")) 
+        queryObj = requests.get(wikipediaApiQueryUrl + queryTitle).json()
 
         #Ensure there is a query, a pages and there is no -1 (no results) in the pages
         if not "query" in queryObj:
@@ -157,48 +186,120 @@ def query(queryTitle):
 
 def getPageAbstractLinks(page, lang="en"):
 
-    #If no page specified, return error
-    if not page:
-        raise Exception("ERROR: No page specified.")
+    #We got a issue (solved):
 
-    requestUrl = "https://" + lang + ".wikipedia.org/w/api.php?action=parse&redirects&section=0&prop=text&format=json&page=" + page
+    #In case we send a query string with ++ by form:
+        #The form converts the symbol to utf8 codes
+        #on arrive, django convert it back to symbol format
+        #we got to reconvert it to utf8 codes in order to post on wikipedia api (requests lib does that for us)
 
-    reqvalue = requests.get(requestUrl).text
+    #In case we send a query string with ++ by hyperlink
+        #The browser ignores the ++ symbols
+        #on arrive the query without ++ is gotten
+        #we got nothing to do since the data were removed. We must supply the hyperlink already utf8 coded
 
-    startIndex = reqvalue.find("<")
+#detect reverse links
+#start storing link into the django db for this
+#on mouse over boxes, description about it will be show
+#remove reverse is a good approach, but no perfect
 
-    #If no < were found, means error. Raise it
-    if startIndex == -1:
-        raise Exception(reqvalue)
+    try:
 
-    endIndex = reqvalue.rfind(">") + 1
+        #If no page specified, return error
+        if not page:
+            raise Exception("ERROR: No page specified.")
 
-    #Get the html portion of the response
-    htmlData = reqvalue[startIndex:endIndex]
+        #TestLink: https://en.wikipedia.org/w/api.php?action=parse&redirects&section=0&prop=text&format=jsonfm&page=C%2B%2B;
 
+        #requestUrl = "https://" + lang + ".wikipedia.org/w/api.php?action=parse&redirects&section=0&prop=text&format=json;
 
-    parser = ParseParagraphLinks() #Create parser
-    parser.feed(htmlData) #feed the parse with the html content
+        requestUrl = "https://" + lang + wikipediaApiUrl
 
-    wikiLinks = []
+        reqParams = {
+            'action': 'parse',
+            'page':page,
+            'redirects': True,
+            'section': 0,
+            'prop': 'text',
+            'format':'json'
+        }
 
-    #Iterate thru the gotten links
-    for link in parser.getLinks():
-        if link.find('\"/wiki/') != 1: #get only wiki links
-            continue
+        reqvalue = requests.get(requestUrl, params=reqParams).text
+
+        startIndex = reqvalue.find("<")
+
+        #If no < were found, means error. Raise it
+        if startIndex == -1:
+            raise Exception(reqvalue)
+
+        endIndex = reqvalue.rfind(">") + 1
+
+        #Get pageId pattern:"pageid":5200013,
+        pageIdMatches = re.findall('"pageid":([0-9]+)', reqvalue)
         
-        endIndex = link.rfind('\"') - 1
-        newLink = link[8:endIndex]
+        #Get page id 
+        pageId = pageIdMatches[0] if len(pageIdMatches) > 0 else -1
 
-        #Replace utf8 "encoded" chars
-        newLink = fixUtf8Chars(newLink)
+        #Get the html portion of the response
+        htmlData = reqvalue[startIndex:endIndex]
+
+        parser = ParseParagraphLinks() #Create parser
+        parser.feed(htmlData) #feed the parse with the html content
+
+
+        abstractLinks = []
+        abstractLinksRaw = [] #Used for avoid repetition
+
+        #Iterate thru the gotten links
+        for link in parser.getLinks():
+            if link.find('\"/wiki/') != 1: #get only wiki links
+                continue
             
-        if not newLink in wikiLinks: #If the link does not exits in the list
-            wikiLinks.append(newLink) #format it properly
+            endIndex = link.rfind('\"') - 1
+            newLink = link[8:endIndex]
 
-    return wikiLinks
+            if newLink in abstractLinksRaw: #If the link already exists in abstractLinks raw
+                continue #Proceed next iteration
+
+            abstractLinksRaw.append(newLink) #Otherwise, add it to the raw values
+
+            #Add wikilink obj to the result array
+            abstractLinks.append({
+                'title': fixUtf8Chars(newLink).replace("_", " "),
+                'href': newLink   
+            })
 
 
+            #Replace utf8 "encoded" chars
+            #newLink = fixUtf8Chars(newLink)
+                
+            #abstractLinks[newLink] = {
+                #'title': fixUtf8Chars(newLink),
+                #'link': newLink        
+            #}
+
+            #if not newLink in abstractLinks: #If the link does not exits in the list
+                #abstractLinks.append(newLink) #format it properly
+
+        return {
+            'article': fixUtf8Chars(page).replace("_", " "),
+            'articleUrl': page,
+            'pageId': pageId,
+            'abstractLinks': abstractLinks
+        }
+        
+    except Exception as e:
+        return {
+            'article': fixUtf8Chars(page).replace("_", " "),
+            'pageId': -1,
+            'abstractLinks': [],
+            'error': str(e)      
+        }
+
+
+def getUTF8Codes(targetString):
+    targetString = targetString.replace("+", "%2B")
+    return targetString
 
 def fixUtf8Chars(targetString):
     formatedString = targetString
@@ -207,8 +308,9 @@ def fixUtf8Chars(targetString):
     formatedString = formatedString.replace("%E2%80%93", "-")
     formatedString = formatedString.replace("%C3%A7", "ç")
 
+    #Get expresion with starts with %, number from 0 to 7, and then an hex OR 
     #Get expresion starting with %c or %d, followed by an hex, a % and then 2 consecutive hex
-    utf8Matches = re.findall("%[cd][a-f0-9]%[a-f0-9]{2}", formatedString, flags=re.IGNORECASE)
+    utf8Matches = re.findall("%[0-7][a-f0-9]|%[cd][a-f0-9]%[a-f0-9]{2}", formatedString, flags=re.IGNORECASE)
 
     for match in utf8Matches:
         #Remove all % symbols
@@ -222,14 +324,23 @@ def fixUtf8Chars(targetString):
 
 
 
+
+
 #Inheirited class to parse html elements
 class ParseParagraphLinks(HTMLParser):
 
-    pTagCounter = 0 #Variable to sum up the number of nested paragraphs we have
-    linksArray = [] #Array to store the links found
+    def __init__(self):
+        super().__init__() #Invoke base class constructor
+        self.pTagCounter = 0 #Variable to sum up the number of nested paragraphs we have
+        self.linksArray = [] #Array to store the links found
+        #self.firstParagraph = ""
+        #self.firstParagraphFlag = True #Flag to detect the first paragraph
 
     def getLinks(self):
         return self.linksArray
+
+    #def getFirstParagraph(self):
+        #return self.firstParagraph
 
     def handle_starttag(self, tag, attrs):
         if tag == 'p':
@@ -246,6 +357,9 @@ class ParseParagraphLinks(HTMLParser):
     def handle_endtag(self, tag):
         if tag == 'p':
             self.pTagCounter -= 1
+            self.firstParagraphFlag = False
 
     #def handle_data(self, data):
+        #if self.pTagCounter == 1 and self.firstParagraphFlag:
+            #self.firstParagraph += data
         #print("Encountered some data  :", data)

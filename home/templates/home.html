@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content-area %}
+<center>
+    <h1>Search</h1>
+
+    <form action="" method="get">
+        <input type="text" name="search" value="" placeholder="I.E. Javascript">
+        <input type="submit" value="Search" />
+    </form>
+
+</center>
+
+    <br>
+
+    {% if search %}
+        {% for topic in searchResults %}
+            <div style="background-color:#ddd;padding:10px;margin-bottom:15px">
+                <a href="?query={{topic.urlTitle}}"><strong>{{topic.title}}</strong></a>
+                <!--<form method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <input name="topic_url_title" type="hidden" value="{{topic.urlTitle}}">
+                    <input type="submit" value="Add">
+                </form>-->
+                <br>
+                <span>{{topic.description}}</span><br>
+            </div>
+        {% empty %}            
+            No results were found.
+        {% endfor %}
+    {% endif %}
+
+    {% if query %}
+        <h1>{{article}}</h1>
+        {% for link in abstractLinks %}
+            <div style="background-color:#ddd;padding:10px;margin-bottom:15px">
+                <a href="?query={{link.href}}"><strong>{{link.title}}</strong></a>
+            </div>
+        {% empty %}
+            No links were found.
+        {% endfor %}
+    {% endif %}
+
+
+
+{% endblock %}
