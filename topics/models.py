@@ -20,7 +20,7 @@ class nvgttModel(models.Model):
 class GeneralTopic(models.Model):
 
     title = models.CharField(max_length=200)
-    #short_description = models.TextField(blank=True)
+    #short_description = models.TextField(default="")
     #url = models.URLField(unique=True)
     pageid = models.BigIntegerField(unique=True)
     urlTitle = models.CharField(max_length=200, unique=True)

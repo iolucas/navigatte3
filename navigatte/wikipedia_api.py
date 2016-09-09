@@ -1,6 +1,8 @@
 import urllib.request
 import json
 
+from urllib.parse import quote, unquote
+
 import requests
 
 from html.parser import HTMLParser
@@ -71,17 +73,31 @@ def search(searchString, lang="en"):
         #Remove undesired results that contents the following
         if " may refer to:" in resultDescriptions[i]:
             continue
+            
+        #Get the last path index
+        lastPathIndex = resultUrls[i].rfind("/") + 1
 
         resultObject.append({
             'title': resultTitles[i].replace("_", " "),
             'description': resultDescriptions[i],
             'url': resultUrls[i],
-            'urlTitle': resultUrls[i][30:] #Get the substring of the url that means its title.
+            'urlTitle': resultUrls[i][lastPathIndex:] #Get the substring of the url that means its title.
         })
 
         #Must use urltitle to avoid bugs in case of some symbols
 
     return resultObject
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -145,14 +161,22 @@ def baseQuery(request, lang):
     return queryResults
 
 
-def query(queryTitle):
+def query(queryTitle, lang='en'):
     #Get the wikipedia api query result in bytes
     try:
         #queryResult = urllib.request.urlopen(wikipediaApiQueryUrl + queryTitle).read()
 
         #Convert to json string and then to a python object
         #queryObj = json.loads(queryResult.decode("utf-8")) 
-        queryObj = requests.get(wikipediaApiQueryUrl + queryTitle).json()
+        #queryObj = requests.get(wikipediaApiQueryUrl + queryTitle).json()
+        #?action=query&format=json&titles="
+        reqParams = {
+            'action': 'query',
+            'format': 'json',
+            'titles': queryTitle
+        }
+
+        queryObj = requests.get("https://" + lang + wikipediaApiUrl, params=reqParams).json()
 
         #Ensure there is a query, a pages and there is no -1 (no results) in the pages
         if not "query" in queryObj:
@@ -182,9 +206,27 @@ def query(queryTitle):
             return None
 
 
+#Test url: #http://nvgtt-utils.mybluemix.net/wikipedia-nonreverse-links?page=c%2b%2b
+def getAbstractNonReverseLinks(page, lang="en"):
+
+    reqParams = {
+        'page': page,
+        'lang': lang
+    }
+
+    result = requests.get("http://nvgtt-utils.mybluemix.net/wikipedia-nonreverse-links", params=reqParams).json()
+
+    if 'error' in result:
+        return []
+
+    return result
+
 
 
 def getPageAbstractLinks(page, lang="en"):
+
+    #Ensure page is unquoted cause requests will quote it (gambiarra)
+    page=unquote(page)
 
     #We got a issue (solved):
 
@@ -265,7 +307,7 @@ def getPageAbstractLinks(page, lang="en"):
 
             #Add wikilink obj to the result array
             abstractLinks.append({
-                'title': fixUtf8Chars(newLink).replace("_", " "),
+                'title': unquote(newLink).replace("_", " "),
                 'href': newLink   
             })
 
@@ -282,7 +324,7 @@ def getPageAbstractLinks(page, lang="en"):
                 #abstractLinks.append(newLink) #format it properly
 
         return {
-            'article': fixUtf8Chars(page).replace("_", " "),
+            'article': unquote(page).replace("_", " "),
             'articleUrl': page,
             'pageId': pageId,
             'abstractLinks': abstractLinks
@@ -290,18 +332,55 @@ def getPageAbstractLinks(page, lang="en"):
         
     except Exception as e:
         return {
-            'article': fixUtf8Chars(page).replace("_", " "),
+            'article': unquote(page).replace("_", " "),
             'pageId': -1,
             'abstractLinks': [],
             'error': str(e)      
         }
 
 
+
+
+def getTrueWikiLink(page, lang="en"):
+    return normalizeWikiLink(page, lang)
+
+
+#Function to return the true link in case of any redirection is present on the page
+#Example url: https://en.wikipedia.org/w/api.php?action=opensearch&redirects=resolve&limit=1&format=jsonfm&search=Tibia_(computer_game)
+def normalizeWikiLink(page, lang='en'):
+
+    reqParams = {
+        'action': 'opensearch',
+        'redirects': 'resolve',
+        'limit': 1,
+        'format': 'json',
+        'search': page
+    }
+
+    resultObj = requests.get("https://" + lang + wikipediaApiUrl, params=reqParams).json()
+
+    
+    if 'error' in resultObj:
+        print(resultObj['error'])
+        return False
+
+    if len(resultObj[3]) == 0:
+        print('GetTrueLinks ERROR: No results.')
+        return False
+
+    #Get the result string
+    resultAddr = resultObj[3][0]
+    #Get the last path index
+    lastPathIndex = resultAddr.rfind("/") + 1
+    #Return the last path (true link)
+    return resultAddr[lastPathIndex:]
+
+
 def getUTF8Codes(targetString):
     targetString = targetString.replace("+", "%2B")
     return targetString
 
-def fixUtf8Chars(targetString):
+def fxUtf8Chars(targetString):
     formatedString = targetString
 
     #Dedicated formats to avoid bugs
