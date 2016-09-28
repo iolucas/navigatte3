@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block content-area %}
+
+    <h1>{{name}} References</h1>
+
+    <div class="subject-reference">
+        <h3>Courses</h3>
+        {% if isOwner %}
+            <form method="post" action="{% url 'add_user_topic_reference' userpage=userpage %}">
+                {% csrf_token %}
+                <input type="text" placeholder="Name" name="course_name">
+                <input type="hidden" name="subject_id" value="{{subject_id}}">
+                <input type="submit" value="Add">
+            </form>
+            <br>
+        {% endif %}
+        
+        {% if not courses %}
+            No course to display.
+        {% else %}
+            <ul>
+                {% for course in courses %}
+                    <li>{{course.name}}</li>
+                        {% if isOwner %}
+                            <form method="post" action="{% url 'delete_user_topic_reference' userpage=userpage %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="subject_id" value="{{subject_id}}">
+                                <input type="hidden" name="reference_type" value="course">
+                                <input type="hidden" name="reference_id" value="{{course.id}}">
+                                <input type="submit" value="Delete">
+                            </form>
+                        {% endif %}       
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+    </div>
+
+    <div class="subject-reference">
+        <h3>Books</h3>
+        {% if isOwner %}
+            <form method="post" action="{% url 'add_user_topic_reference' userpage=userpage %}">
+                {% csrf_token %}
+                <input type="text" placeholder="Title" name="book_title">
+                <input type="hidden" name="subject_id" value="{{subject_id}}">
+                <input type="submit" value="Add">
+            </form>
+            <br>
+        {% endif %}
+
+        {% if not books %}
+            No book to display.
+        {% else %}
+            <ul>
+                {% for book in books %}
+                    <li>{{book.name}}</li>
+                        {% if isOwner %}
+                            <form method="post" action="{% url 'delete_user_topic_reference' userpage=userpage %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="subject_id" value="{{subject_id}}">
+                                <input type="hidden" name="reference_type" value="book">
+                                <input type="hidden" name="reference_id" value="{{book.id}}">
+                                <input type="submit" value="Delete">
+                            </form>
+                        {% endif %}      
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+
+    <div class="subject-reference">
+        <h3>Websites</h3>
+        {% if isOwner %}
+            <form method="post" action="{% url 'add_user_topic_reference' userpage=userpage %}">
+                {% csrf_token %}
+                <input type="text" placeholder="Address" name="website_address">
+                <input type="hidden" name="subject_id" value="{{subject_id}}">
+                <input type="submit" value="Add">
+            </form>
+            <br>
+        {% endif %}
+        
+        {% if not websites %}
+            No website to display.
+        {% else %}
+            <ul>
+            {% for website in websites %}
+                <li><a href="{{website.address}}" target="_blank">{{website.name}}</a></li> 
+                {% if isOwner %}
+                    <form method="post" action="{% url 'delete_user_topic_reference' userpage=userpage %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="subject_id" value="{{subject_id}}">
+                        <input type="hidden" name="reference_type" value="website">
+                        <input type="hidden" name="reference_id" value="{{website.id}}">
+                        <input type="submit" value="Delete">
+                    </form>
+                {% endif %}   
+            {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+
+    {% if isOwner %}
+        <br>
+        <br>
+        <form action="{% url 'delete_user_topic' userpage=userpage %}" method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="subject_id" value="{{subject_id}}">
+            <input type="submit" value="Delete Subject">
+        </form>
+    {% endif %}
+
+{% endblock %}

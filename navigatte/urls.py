@@ -28,6 +28,10 @@ urlpatterns = [
     
     url(r'^home/', include('home.urls')),
 
+    url(r'^topic/', include('topics2.urls')),
+
+    url(r'^maps/', include('maps.urls')),
+
     #User related options
     #url(r'^(?P<userpage>\w+)/', include('user.urls')),
     url(r'^subjects/(?P<userpage>\w+)/', include('subjects.urls')),

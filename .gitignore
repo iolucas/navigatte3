@@ -51,3 +51,4 @@ Temporary Items
 secretkey.py
 */migrations/
 static/
+/old_dbs
