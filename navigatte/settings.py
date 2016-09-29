@@ -69,8 +69,6 @@ INSTALLED_APPS = [
     'register',
     'login',
     'home',
-    'topics2',
-    'maps'
 ]
 
 MIDDLEWARE_CLASSES = [

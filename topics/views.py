@@ -5,9 +5,13 @@ from django.contrib.auth.models import User
 
 from django.contrib.auth.decorators import login_required
 
-from .models import GeneralTopic, UserTopic, BookReference, CourseReference, WebsiteReference
+from .models import GeneralTopic, UserTopic, BookReference, CourseReference, WebsiteReference, WikiArticle, WikiUrl, UserWikiArticle
 
-from navigatte import wikipedia_api, settings
+from navigatte import  settings
+
+from . import wikipedia_api2 as wikipedia_api
+
+from urllib.parse import quote, unquote #Module to encode/decode urls strings
 
 #Method to get the url from its label
 from django.core.urlresolvers import reverse
@@ -27,9 +31,17 @@ def addNewUserTopic(request, userpage):
     #If it was a new topic to be added
     if request.method == "POST" and 'topic_url_title' in request.POST and request.POST['topic_url_title']:
         
-        queryResult = wikipedia_api.query(request.POST['topic_url_title'])
+        pageUrl = unquote(request.POST['topic_url_title'])
+
+        queryResult = wikipedia_api.getPageAbstractLinks(pageUrl)
+        return HttpResponse(str(queryResult))
+
+
         if queryResult == None:
             return HttpResponse("Invalid request")
+
+        for key in queryResult:
+            print(key)
         
         #Try to get topic, if not found, create a new
         try: 
@@ -81,7 +93,7 @@ def displayUserTopics(request, userpage):
     #userpage is the current userpage displayed
     #Get all the subjects that are not deleted
     return render(request, 'user-topics-display.html', {
-        'topic_list': userpageRef.usertopic_set.filter(deleted=False),
+        'topic_list': userpageRef.userwikiarticle_set.filter(deleted=False),
         'userpage': userpage,
         'isOwner': userpageRef == request.user,
     })
@@ -116,6 +128,8 @@ def userTopicDetails(request, userpage):
     else: #If no id, return the topics list
         return redirect('display_user_topics')
 
+
+
 #View to handle subject delete
 @login_required
 def deleteUserTopic(request, userpage):
@@ -142,6 +156,7 @@ def deleteUserTopic(request, userpage):
             return invalidRequest("Error while deleting: " + str(e))
 
     return invalidRequest("No subject id or invalid subject id send.")
+
 
 
 @login_required
@@ -265,6 +280,70 @@ def deleteUserTopicReference(request, userpage):
 
     except Exception as e:
         return invalidRequest("Error while deleting: " + str(e))
+
+
+def getOrCreateArticleByUrl(url, lang, user):
+    """Return article that the passed url-lang points to. If it does not exists, try to create it."""
+
+    #Get or create the current url
+    articleUrl, urlCreated = getOrCreateWikiUrl(url, lang, user)
+
+    articleCreatedFlag = False
+
+    #If the url was not created and it points to an article, return the articleUrl with a false created flag
+    if not urlCreated and articleUrl.pointsTo:
+        return articleUrl.pointsTo, articleCreatedFlag
+
+    #If the url does not points to anything, query the url on wikipedia_api
+    pageData = wikipedia_api.getPageAbstractLinks(url, lang)
+
+    #If some error occured, return none
+    if 'error' in pageData:
+        return None, articleCreatedFlag
+
+    #Try to get the article with pageId, if not found, create it 
+    try:
+        article = WikiArticle.objects.get(pageId=pageData['pageId'])
+    except WikiArticle.DoesNotExist:
+        articleCreatedFlag = True
+
+        #If the article does not exists, create it 
+        article = WikiArticle(title=pageData['title'], pageId=pageData['pageId'], language=pageData['lang'], createdBy=user)
+
+        article.save()
+
+        #Populate article abstract links with wikiurls
+        for link in pageData['abstractLinks']:
+            linkWikiUrl, urlCreated = getOrCreateWikiUrl(link, pageData['lang'], user)
+            article.abstractUrls.add(linkWikiUrl)
+
+        article.save()
+
+    #Set the article to the current url and save
+    articleUrl.pointsTo = article
+    articleUrl.save()
+
+    #return the article and the created flag
+    return article, articleCreatedFlag
+
+
+def getOrCreateWikiUrl(url, lang, user):
+    """Return the passed arguments and if it not exists, try to create it."""
+
+    createdFlag = False
+
+    #Try to get the article wikiurl
+    try:
+        wikiUrl = WikiUrl.objects.get(urlPath=url, language=lang)
+    #If it does not exists, create it and set created flag
+    except WikiUrl.DoesNotExist:
+        wikiUrl = WikiUrl(urlPath=url, language=lang, createdBy=user)
+        wikiUrl.save()
+        createdFlag = True
+
+    return wikiUrl, createdFlag
+
+
 
 
 def invalidRequest(debugMsg, nonDebugMsg = "Invalid Request"):

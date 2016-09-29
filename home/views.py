@@ -2,7 +2,7 @@ from django.shortcuts import render
 
 from django.http import HttpResponse
 
-from navigatte import wikipedia_api
+from topics import wikipedia_api2 as wikipedia_api
 
 from topics.models import GeneralTopic
 

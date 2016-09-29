@@ -240,10 +240,10 @@ def getPageAbstractLinks(page, lang="en"):
         #on arrive the query without ++ is gotten
         #we got nothing to do since the data were removed. We must supply the hyperlink already utf8 coded
 
-#detect reverse links
-#start storing link into the django db for this
-#on mouse over boxes, description about it will be show
-#remove reverse is a good approach, but no perfect
+        #detect reverse links
+        #start storing link into the django db for this
+        #on mouse over boxes, description about it will be show
+        #remove reverse is a good approach, but no perfect
 
     try:
 
