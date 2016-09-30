@@ -112,6 +112,9 @@ def displayUserArticlesDetails(request, userpage, articleId):
     except UserWikiArticle.DoesNotExist:
         return HttpResponseNotFound("User article not found.")
 
+
+
+
 @login_required
 def displayUserArticlesSearch(request, userpage, articleId):
     #Check whether the target user exists and get it
@@ -190,9 +193,9 @@ def displayUserArticlesSearch(request, userpage, articleId):
 @login_required
 def addUserArticlePreRequisite(request, userpage, articleId):
 
-    implement deletation
-    improve page looks with space for user page permanent identification and article identification
-    clean useless stuff
+    #implement deletation
+    #improve page looks with space for user page permanent identification and article identification
+    #clean useless stuff
 
 
     if not "prereqUrl" in request.POST:
@@ -268,18 +271,17 @@ def deleteUserTopic(request, userpage):
         return HttpResponse("Invalid Request")
 
     #If a subject_id field is present and is valid (not empty)
-    if 'subject_id' in request.POST and request.POST['subject_id']:
+    if 'articleId' in request.POST and request.POST['articleId']:
 
         try:
-            targetSubject = UserTopic.objects.get(id=request.POST['subject_id'], owner=request.user)
+            userArticle = UserWikiArticle.objects.get(id=request.POST['articleId'], createdBy=request.user)
 
-            #Verifies if this subject does belongs to this user
-            #if request.user != targetSubject.owner:
-                #return invalidRequest("Invalid Delete. This subject does not belong to the signed in user.")
+            #Set delete flag in the object and return subjects page
+            #targetSubject.deleted = True
 
-            #If it is the owner, set delete flag in the object and return subjects page
-            targetSubject.deleted = True
-            targetSubject.save()
+            print("test")
+            userArticle.delete()
+            #userArticle.save()
 
             return redirect('display_user_topics', userpage=userpage)
 
@@ -368,7 +370,33 @@ def addUserTopicReference(request, userpage):
 #View to handle subject reference delete
 #For now remove the reference from the subject, later set a remove flag and keeps record
 
+def deleteUserArticlePreRequisite(request, userpage, articleId):
+    if request.method != 'POST':
+        return invalidRequest("Invalid request. POST method expected.")
 
+    if not validateEntries(request.POST, ["prereqId"]):
+        return invalidRequest("Invalid request. prereqId missing or not valid.")
+
+    prereqId = request.POST['prereqId']
+
+    try:
+        #Get userArticle reference
+
+        userArticle = UserWikiArticle.objects.get(id=articleId, createdBy=request.user)
+
+        #Get the prereq reference 
+        prereqArticle = WikiArticle.objects.get(id=prereqId)
+
+        #remove the reference from the subject
+        userArticle.preReqArticles.remove(prereqArticle)
+        
+        #Save changes
+        userArticle.save()
+
+        return redirect(reverse('displayUserArticlesDetails', kwargs={'userpage': userpage, 'articleId':articleId}))
+
+    except Exception as e:
+        return invalidRequest("Error while deleting: " + str(e))
 
 
 

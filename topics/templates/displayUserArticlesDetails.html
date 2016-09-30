@@ -7,7 +7,7 @@
     <div class="subject-reference">
         <h3>Pre-requisites</h3>
         {% if isOwner %}
-        <a href="{% url 'displayUserArticlesSearch' userpage=userpage articleId=articleId%}">+ Add New Pre-requisite</a>
+        <a href="{% url 'displayUserArticlesSearch' userpage=userpage articleId=articleId %}">+ Add New Pre-requisite</a>
         <br><br>
         {% endif %}
 
@@ -19,10 +19,9 @@
                 {% for prereq in prereqs %}
                     <li>{{prereq.title}}</li>
                         {% if isOwner %}
-                            <form method="post" action="{% url 'delete_user_topic_reference' userpage=userpage %}">
+                            <form method="post" action="{% url 'deleteUserArticlePreRequisite' userpage=userpage articleId=articleId %}">
                                 {% csrf_token %}
-                                <input type="hidden" name="articleId" value="{{articleId}}">
-                                <input type="hidden" name="reference_id" value="{{prereq.id}}">
+                                <input type="hidden" name="prereqId" value="{{prereq.id}}">
                                 <input type="submit" value="Delete">
                             </form>
                         {% endif %}       
@@ -34,7 +33,7 @@
 
 
 
-    {% if isOwner and False %}
+    {% if isOwner%}
         <br>
         <br>
         <form action="{% url 'delete_user_topic' userpage=userpage %}" method="POST">

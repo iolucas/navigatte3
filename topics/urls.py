@@ -20,4 +20,5 @@ urlpatterns = [
     url(r'^(?P<articleId>\w+)/search/$', views.displayUserArticlesSearch, name='displayUserArticlesSearch'),
 
     url(r'^(?P<articleId>\w+)/addUserArticlePreRequisite$', views.addUserArticlePreRequisite, name='addUserArticlePreRequisite'),
+    url(r'^(?P<articleId>\w+)/deleteUserArticlePreRequisite$', views.deleteUserArticlePreRequisite, name='deleteUserArticlePreRequisite'),
 ]
