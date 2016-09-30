@@ -32,35 +32,25 @@ def addNewUserTopic(request, userpage):
     if request.method == "POST" and 'topic_url_title' in request.POST and request.POST['topic_url_title']:
         
         pageUrl = unquote(request.POST['topic_url_title'])
+        pageLang = "en" #if not 'lang' in request.POST else request.POST['lang']
 
-        queryResult = wikipedia_api.getPageAbstractLinks(pageUrl)
-        return HttpResponse(str(queryResult))
+        #Get the WikiArticle reference
+        wikiArticle, created = getOrCreateArticleByUrl(pageUrl, pageLang, request.user)
 
+        if wikiArticle == None:
+            return invalidRequest("The wikiarticle reference returned is None. This is due an invalid url passed or an error during the request.")
 
-        if queryResult == None:
-            return HttpResponse("Invalid request")
-
-        for key in queryResult:
-            print(key)
-        
-        #Try to get topic, if not found, create a new
-        try: 
-            topicReference = GeneralTopic.objects.get(pageid=queryResult['pageid'])
-        except GeneralTopic.DoesNotExist:
-            topicReference = GeneralTopic(title=queryResult['title'], 
-                                                pageid=queryResult['pageid'], urlTitle=queryResult['urlTitle'])
-            topicReference.save()
-
-        #Try to get this reference on the current user topics, if it does not exists, create a new
+        #Try to get this reference on the current user articles, if it does not exists, create a new with the reference
         try:
-            request.user.usertopic_set.get(generalTopic=topicReference, deleted=False)
-            return HttpResponse("User topic already exists.")
-        except UserTopic.DoesNotExist:
+            request.user.userwikiarticle_set.get(wikiArticle=wikiArticle, deleted=False)
+            return HttpResponse("User article already exists.")
+        except UserWikiArticle.DoesNotExist:
             #If it does not exists, create it
-            newUserTopic = UserTopic(generalTopic=topicReference, owner=request.user)
-            newUserTopic.save()
+            newUserWikiArticle = UserWikiArticle(wikiArticle=wikiArticle, createdBy=request.user)
+            newUserWikiArticle.save()    
 
         return redirect('display_user_topics', userpage)
+
 
     #ON GET        
 
@@ -72,6 +62,7 @@ def addNewUserTopic(request, userpage):
 
     resultObject = wikipedia_api.search(request.GET['search'])
 
+    #If some error on search
     if resultObject == None:
         return HttpResponse("Error while completing the request.")
 
@@ -97,6 +88,146 @@ def displayUserTopics(request, userpage):
         'userpage': userpage,
         'isOwner': userpageRef == request.user,
     })
+
+def displayUserArticlesDetails(request, userpage, articleId):
+    #Check whether the target user exists and get it
+    try:
+        userpageRef = User.objects.get_by_natural_key(username=userpage)
+    except: #If it does not exists, return not found
+        return HttpResponseNotFound("User not found.")
+
+    #Try to get the user wiki article of the target user
+    try:
+        userWikiArticle = userpageRef.userwikiarticle_set.get(id=articleId)
+
+        #Render the page with the target data
+        return render(request, 'displayUserArticlesDetails.html', { 
+            'name': userWikiArticle,
+            'prereqs': userWikiArticle.preReqArticles.all(),    
+            'articleId': articleId, 
+            'userpage': userpage,
+            'isOwner': userpageRef == request.user,         
+        })
+
+    except UserWikiArticle.DoesNotExist:
+        return HttpResponseNotFound("User article not found.")
+
+@login_required
+def displayUserArticlesSearch(request, userpage, articleId):
+    #Check whether the target user exists and get it
+    try:
+        userpageRef = User.objects.get_by_natural_key(username=userpage)
+    except: #If it does not exists, return not found
+        return HttpResponseNotFound("User not found.")
+
+    #If this is not the logged user, return invalid request
+    if userpageRef != request.user:
+        return invalidRequest("You are attempting to access a search page that is not of your user.")
+
+    #Try to get the user wiki article of the target user
+    try:
+        userWikiArticle = userpageRef.userwikiarticle_set.get(id=articleId)
+    except UserWikiArticle.DoesNotExist:
+        return HttpResponseNotFound("User article not found.")
+
+    
+    #Case there is a search query and it is valid
+    if 's' in request.GET and request.GET['s']:
+
+        resultObject = wikipedia_api.search(request.GET['s'])
+
+        #If some error on search
+        if resultObject == None:
+            return HttpResponse("Error while completing the request.")
+
+        return render(request, 'displayUserArticlesSearch.html', { 
+            'name': userWikiArticle,
+            'resultTopics': resultObject,
+            'articleId': articleId, 
+            'userpage': userpage,
+            'isOwner': userpageRef == request.user,
+            'noQuery': False        
+        })
+
+
+
+
+
+    #Filter wiki article abstract urls
+    #Sugestions are important, so we filter not usefull links like those which return to the same page or the ones with a colon (:), that are wikipedia specific pages
+    filteredAbstractUrls = []
+    for abstUrl in userWikiArticle.wikiArticle.abstractUrls.all():
+        #Not include urls that have colon included
+        if ":" in abstUrl.urlPath:
+            continue
+        
+
+        #Get abst links for each abst url if it does not have
+        #Use them to organize the sugestions
+        #if abstUrl.numberOfBacklinks == -1:
+            #abstUrl.numberOfBacklinks = len(wikipedia_api.getPageBackLinks(abstUrl.urlPath, abstUrl.language))
+            #abstUrl.save() #Save changes    
+
+        filteredAbstractUrls.append({
+            'title': abstUrl.urlPath.replace("_", " "),
+            'url': abstUrl.urlPath,
+            #'backlinksQty': abstUrl.numberOfBacklinks         
+        })
+
+
+    #Get all the references that have not the delete flag set
+    return render(request, 'displayUserArticlesSearch.html', { 
+        'name': userWikiArticle,
+        'abstractLinks': filteredAbstractUrls,
+        'articleId': articleId, 
+        'userpage': userpage,
+        'isOwner': userpageRef == request.user,
+        'noQuery': True        
+    })
+
+
+
+@login_required
+def addUserArticlePreRequisite(request, userpage, articleId):
+
+    implement deletation
+    improve page looks with space for user page permanent identification and article identification
+    clean useless stuff
+
+
+    if not "prereqUrl" in request.POST:
+        return invalidRequest("Invalid prereq add request. No prerequrl in POST method.")
+
+    #Get target article url
+    prereqUrl = request.POST["prereqUrl"]
+
+    #Try to get the article reference passed on the current logged user
+    try:
+        targetUserArticle = request.user.userwikiarticle_set.get(id=articleId)
+
+        #Get prereq article by its url 
+        prereqArticle, created = getOrCreateArticleByUrl(prereqUrl, "en", request.user)
+
+        #If the prereq article is not valid, raise exception
+        if not prereqArticle:
+            raise Exception("Invalid url passed to the query.")
+
+        #Add the article to the prereq list of the target user article
+        targetUserArticle.preReqArticles.add(prereqArticle)
+
+        return redirect(reverse('displayUserArticlesDetails', kwargs={'userpage': userpage, 'articleId':articleId}))
+
+    except UserWikiArticle.DoesNotExist:
+        return invalidRequest("ArticleId not found for this user")
+
+    except Exception as e:
+        print(str(e))
+        return invalidRequest(str(e))
+
+
+    
+    
+
 
 def userTopicDetails(request, userpage):
     
@@ -236,6 +367,11 @@ def addUserTopicReference(request, userpage):
 
 #View to handle subject reference delete
 #For now remove the reference from the subject, later set a remove flag and keeps record
+
+
+
+
+
 def deleteUserTopicReference(request, userpage):
     if request.method != 'POST':
         return invalidRequest("Invalid request. POST method expected.")
@@ -307,13 +443,22 @@ def getOrCreateArticleByUrl(url, lang, user):
     except WikiArticle.DoesNotExist:
         articleCreatedFlag = True
 
+        #Create title url (url used to access the articles)
+        urlTitle = quote(pageData['title']).replace(" ", "_")
+
         #If the article does not exists, create it 
-        article = WikiArticle(title=pageData['title'], pageId=pageData['pageId'], language=pageData['lang'], createdBy=user)
+        article = WikiArticle(title=pageData['title'], titleUrl=urlTitle, pageId=pageData['pageId'], language=pageData['lang'], createdBy=user)
 
         article.save()
 
-        #Populate article abstract links with wikiurls
+        #Filter abstract links repeated
+        notRepeatedAbstractLinks = []
         for link in pageData['abstractLinks']:
+            if not link in notRepeatedAbstractLinks:
+                notRepeatedAbstractLinks.append(link)
+
+        #Populate article abstract links with wikiurls
+        for link in notRepeatedAbstractLinks:
             linkWikiUrl, urlCreated = getOrCreateWikiUrl(link, pageData['lang'], user)
             article.abstractUrls.add(linkWikiUrl)
 
@@ -347,6 +492,8 @@ def getOrCreateWikiUrl(url, lang, user):
 
 
 def invalidRequest(debugMsg, nonDebugMsg = "Invalid Request"):
+    """In case debug mode, returns the verbose passed string. If not in debug mode, return a simple invalid request message."""
+
     if settings.DEBUG:
         return HttpResponse(debugMsg) 
 

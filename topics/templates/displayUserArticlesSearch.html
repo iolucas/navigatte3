@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content-area %}
+
+    <h1>{{name}} Search</h1>
+
+    <form action="" method="get">
+        <input type="text" name="s" value="" placeholder="Search...">
+        <input type="submit" value="Search" />
+    </form>
+
+    <br>
+
+
+    {% if noQuery %}
+    <div class="subject-reference">
+        <h3>May be a base for {{name}}:</h3>
+        {% if not abstractLinks %}
+            Nothing to display.
+        {% else %}
+            <ul>
+                {% for abstLink in abstractLinks %}
+                    <li>{{abstLink.title}}
+                        {% if isOwner %}
+                            <form  style="display:inline-block;" method="post" action="{% url 'addUserArticlePreRequisite' userpage=userpage articleId=articleId %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="prereqUrl" value="{{abstLink.url}}">
+                                <input style="display:inline-block;" type="submit" value="Add">
+                            </form>
+                        {% endif %}
+                         </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+    </div>
+    {% else %}
+        {% for topic in resultTopics %}
+            <div style="background-color:#ddd;padding:10px;margin-bottom:15px">
+                <strong>{{topic.title}}</strong>
+                <form  style="display:inline-block;" method="post" action="{% url 'addUserArticlePreRequisite' userpage=userpage articleId=articleId %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="prereqUrl" value="{{topic.urlTitle}}">
+                    <input style="display:inline-block;" type="submit" value="Add">
+                </form>
+                <!--<form method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <input name="topic_url_title" type="hidden" value="{{topic.urlTitle}}">
+                    <input type="submit" value="Add">
+                </form>-->
+                <br>
+                <span>{{topic.description}}</span><br>
+                <a href="{{topic.url}}" target="_blank">{{topic.url}}</a>
+            </div>
+        {% endfor %}
+
+    {% endif %}
+
+
+{% endblock %}

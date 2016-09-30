@@ -7,6 +7,96 @@ from urllib.parse import quote, unquote #Module to encode/decode urls strings
 
 wikipediaApiUrl = ".wikipedia.org/w/api.php"
 
+#On nodejs implementation this function was necessary
+def encodeContinueUnicodeChar(text):
+    pass
+    #return text.replace(/\|0\|(.+)\|0\|/gi, function(match, character) {
+        #return "|0|" + encodeURIComponent(character) + "|0|";
+    #});
+
+
+def getPageBackLinks(page, lang):
+    #Test Url
+    #https://en.wikipedia.org/w/api.php?action=query&list=backlinks&bltitle=Main%20Page&bllimit=5&blfilterredir=redirects
+    #?action=query & format=json & list=backlinks & bllimit=250 & blnamespace=0 & blredirect & bltitle=" + page;
+
+    #If no page or lang specified, return error
+    if not page or not lang:
+        raise Exception("No page or lang specified")
+
+    requestUrl = "https://" + lang + wikipediaApiUrl
+
+    #Params to return only the abstract of the wikipedia article (section 0)
+    reqParams = {
+        'action': 'query',
+        'format': 'json',
+        'list': 'backlinks',
+        'bllimit': 250,
+        'blnamespace': 0,
+        'blredirect': True,
+        'bltitle': page
+    }
+
+    backLinks = []  #Buffer to store links
+    maxIterationCount = 100 #Max number of continues batches allowed
+
+    #Keep doing this until break is called
+    while True:
+
+        #Perform request and convert result to json
+        recObj = requests.get(requestUrl, params=reqParams).json()
+
+        #Iterate thru the pages
+        for pageObj in recObj['query']['backlinks']:
+            
+            backLinks.append(pageObj['title'])
+
+            #If there is redirect links, push them to the backLinks too
+            if 'redirlinks' in pageObj:
+                for redirlink in pageObj['redirlinks']:
+                    backLinks.append(redirlink['title'])
+
+        #Subtract max iteration count
+        maxIterationCount -= 1
+
+        #If there is a continue object, proceed to the next batch,
+        if 'continue' in recObj and maxIterationCount > 0:
+            reqParams['blcontinue'] = recObj['continue']['blcontinue']
+            #printUtf8(reqParams['blcontinue'])
+        else: #If not, exit iteration
+            break
+
+
+    #Filter backlinks
+    filteredBacklinks = []
+
+    for bl in backLinks:
+        #If the link already exists, proceed next iteration
+        if bl in filteredBacklinks:
+            continue
+
+        #If the link is a desambiguation page
+        if "(disambiguation)" in bl:
+            continue
+
+        #If the link is a list of something
+        if "List of" in bl:
+            continue
+
+        #If the link is a index of something
+        if "Index of" in bl:
+            continue
+
+        #If the link is a glossary of something
+        if "Glossary of" in bl:
+            continue
+
+        filteredBacklinks.append(bl)
+
+    return filteredBacklinks
+
+
+
 def getPageAbstractLinks(page, lang="en"):
 
     try:
@@ -42,7 +132,7 @@ def getPageAbstractLinks(page, lang="en"):
         endIndex = reqvalue.rfind(">") + 1
 
         #Get page title pattern:"title":"C++",
-        pageTitleMatches = re.findall('"title":"(.+)",', reqvalue)
+        pageTitleMatches = re.findall('"title":"([^,]+)",', reqvalue)
 
         if len(pageTitleMatches) == 0:
             raise Exception("ERROR: No page title received.")
@@ -209,10 +299,14 @@ def printUtf8(str):
 if __name__ == "__main__" and sys.argv[1] == "test":
     print("Testing wikipedia api2...\n")
     
-    queryResult = getPageAbstractLinks("c++")
-    print(str(queryResult))
+    #queryResult = getPageAbstractLinks("c++")
+    #print(str(queryResult))
     
-    print("")
+    #print("")
 
-    queryResult = search("c++")
+    #queryResult = search("c++")
+    #printUtf8(str(queryResult))
+
+    queryResult = getPageBackLinks("tibia (computer game)", "en")
     printUtf8(str(queryResult))
+    print(len(queryResult))

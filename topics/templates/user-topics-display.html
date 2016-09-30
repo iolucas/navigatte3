@@ -13,7 +13,7 @@
 
   <ul>
     {% for topic in topic_list %}
-        <li><a href="{% url 'user_topic_details' userpage=userpage %}?id={{ topic.id }}">{{ topic }}</a></li>
+        <li><a href="{% url 'displayUserArticlesDetails' userpage=userpage articleId=topic.id %}">{{ topic }}</a></li>
     {% endfor %}
   </ul>
 

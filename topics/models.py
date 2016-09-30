@@ -94,6 +94,8 @@ class WikiArticle(MapsCommonFields):
     pageId = models.BigIntegerField(unique=True)
     language = models.CharField(max_length=10)
 
+    titleUrl = models.CharField(max_length=200, default="")
+
     #Field to store abstract urls for this wiki article
     abstractUrls = models.ManyToManyField('WikiUrl')
 
@@ -105,6 +107,8 @@ class WikiUrl(MapsCommonFields):
     urlPath = models.CharField(max_length=200)
     language = models.CharField(max_length=10)
     pointsTo = models.ForeignKey(WikiArticle, null=True)
+
+    numberOfBacklinks = models.IntegerField(default=-1)
 
     #Flag to be set if the wikiurl does not exists
     doesNotExists = models.BooleanField(default=False)
