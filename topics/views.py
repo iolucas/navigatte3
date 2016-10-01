@@ -241,6 +241,9 @@ def addUserArticlePreRequisite(request, userpage, articleId):
         return invalidRequest(str(e))
 
 
+
+#check how hard is to use i18n
+
 def verifyArticleCircularReferece(targetArticle, toVerifyArticle):
     """Function to check if the there is a circular reference adding the target article to the toVerifyArticle"""
 

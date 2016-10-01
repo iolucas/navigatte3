@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block main-content-area %}
+<section>
+    <h1>Bem vindo</h1>
+    <p>Navigatte é um sistema para você guardar e compartilhar os assuntos que você tem conhecimento e o caminho que você percorreu até eles.</p>
+    <p><a href="{% url 'register_index' %}">Registre-se</a> e <a href="{% url 'login_index' %}">entre</a> para testar.</p>
+
+    <br>
+
+    <h2>Usuarios Cadastrados:</h2>
+
+    {% for regUser in registeredUsers %}
+        <p><a href="{% url 'display_user_topics' userpage=regUser %}">{{regUser}}</a></p>
+    {% endfor %}    
+
+
+
+
+</section>
+
+
+{% endblock %}

@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 
-{% block content-area %}
+{% block main-content-area %}
+<section>
+
   <h1>Register</h1>
 
   <form action="" method="post">
@@ -8,4 +10,6 @@
        {% csrf_token %}
       <input type="submit" value="Create the account">
   </form>
+
+</section>
 {% endblock %}

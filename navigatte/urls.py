@@ -22,7 +22,7 @@ urlpatterns = [
     url(r'^$', views.nvgttIndex),
 
     #General options
-    url(r'^admin/', admin.site.urls),
+    url(r'^admin/interface/', admin.site.urls),
     url(r'^register/', include('register.urls')),
     url(r'^login/', include('login.urls')),
     

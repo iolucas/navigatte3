@@ -10,12 +10,33 @@ from urllib.parse import quote, unquote
 
 from .models import AbstractLinks
 
+from django.contrib.auth.models import User
+
 import re
 
 #implement boxes, parent references and projections
 #check about diferente names for links and title
 #Message to register to get more detailed info back knowledges, and possible knowledges
 
+
+
+def homeWelcome(request):
+    #Get all the users
+    allUsers = User.objects.all()
+
+    registeredUsers = []
+
+    for regUser in allUsers:
+        registeredUsers.append(regUser.username)
+
+    return render(request, "homeWelcome.html", {
+        'registeredUsers': registeredUsers    
+    })
+
+
+
+
+#create welcome page with users
 def homeIndex(request):
 
     lang = "en"

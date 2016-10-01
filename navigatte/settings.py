@@ -42,15 +42,20 @@ else: #non production env
 
 #If we are in production env
 if "BLUEMIX_REGION" in os.environ:
+
+    SECUREFLAG = False
     
     # Honor the 'X-Forwarded-Proto' header for request.is_secure()
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    SECURE_SSL_REDIRECT = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = SECUREFLAG
+    SESSION_COOKIE_SECURE = SECUREFLAG
+    CSRF_COOKIE_SECURE = SECUREFLAG
+
+    if not SECUREFLAG:
+        print("WARNING! SECURE FLAG IS TURNED OFF.")
 
 #Register disable flag
-REGISTER_DISABLED = True
+REGISTER_DISABLED = False
 
 #Login required url
 LOGIN_URL = "/login/"
