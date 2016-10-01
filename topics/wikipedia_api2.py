@@ -163,6 +163,9 @@ def getPageAbstractLinks(page, lang="en"):
             endIndex = link.rfind('\"') - 1
             newLink = link[8:endIndex]
 
+            #Remove everything after a #
+            if "#" in newLink:
+                newLink = newLink[0:newLink.find("#")]
 
             #Append abstract wiki links
             abstractLinks.append(unquote(newLink)) 

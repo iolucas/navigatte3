@@ -125,7 +125,6 @@ class UserWikiArticle(MapsCommonFields):
     #Field to store reference to the wiki article
     wikiArticle = models.ForeignKey(WikiArticle)
     #Field to store the pre requisites articles for this user article
-    preReqArticles = models.ManyToManyField(WikiArticle, related_name='prereqs')
 
     preReqUserArticles = models.ManyToManyField("UserWikiArticle", related_name='prArticles')
 

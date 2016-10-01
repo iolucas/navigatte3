@@ -33,7 +33,7 @@ else: #non production env
 #Set allowed hosts for prod/dev enviraonemnt
 #If we are in production env
 if "BLUEMIX_REGION" in os.environ:
-    ALLOWED_HOSTS = ["nvgtt.mybluemix.net"]
+    ALLOWED_HOSTS = ["nvgtt.mybluemix.net", "navigatte.com"]
 else: #non production env
     ALLOWED_HOSTS = ["*"]
 
@@ -50,7 +50,7 @@ if "BLUEMIX_REGION" in os.environ:
     CSRF_COOKIE_SECURE = True
 
 #Register disable flag
-REGISTER_DISABLED = False
+REGISTER_DISABLED = True
 
 #Login required url
 LOGIN_URL = "/login/"
@@ -158,13 +158,16 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
 
 
-#static file directory inclusion
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR,'static'),
-]
-#Necessary for deploy on bluemix
-#For some reason, STATICFILES_DIRS does not work
-#STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+#Static file directory inclusion
+#If we are in production env
+if "BLUEMIX_REGION" in os.environ:
+    #Serve static files in the root static folder
+    STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+else: #non production env
+    #Serve on correspondent static folders
+    STATICFILES_DIRS = [
+        os.path.join(BASE_DIR,'static'),
+    ]
 
 STATIC_URL = '/static/'
 

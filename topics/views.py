@@ -195,10 +195,8 @@ def displayUserArticlesSearch(request, userpage, articleId):
 @login_required
 def addUserArticlePreRequisite(request, userpage, articleId):
 
-    #implement deletation
-    #improve page looks with space for user page permanent identification and article identification
-    #clean useless stuff
-
+    #must clean useless stuff
+    #create methods to avoid circular references on articles and their pre reqs
 
     if not "prereqUrl" in request.POST:
         return invalidRequest("Invalid prereq add request. No prerequrl in POST method.")
@@ -220,6 +218,11 @@ def addUserArticlePreRequisite(request, userpage, articleId):
         #Verify if the user have the prereq article, if not, add it     
         try:
             prereqUserArticle = request.user.userwikiarticle_set.get(wikiArticle=prereqArticle, deleted=False)
+        
+            #If the prereq article exists, check if adding it do not create a circular reference
+            if verifyArticleCircularReferece(targetUserArticle, prereqUserArticle):
+                return HttpResponse("Error: Adding this pre-requisite will generate a circular reference.")
+        
         except UserWikiArticle.DoesNotExist:
             #If it does not exists, create it
             prereqUserArticle = UserWikiArticle(wikiArticle=prereqArticle, createdBy=request.user)
@@ -238,7 +241,17 @@ def addUserArticlePreRequisite(request, userpage, articleId):
         return invalidRequest(str(e))
 
 
-    
+def verifyArticleCircularReferece(targetArticle, toVerifyArticle):
+    """Function to check if the there is a circular reference adding the target article to the toVerifyArticle"""
+
+    #Iterate thru the toVerifyArticle prereqs
+    for userArticle in toVerifyArticle.preReqUserArticles.all():
+        #If the current article is equal to the target article 
+        #Or the recurse call of this function with the current user article return true
+        if userArticle == targetArticle or verifyArticleCircularReferece(targetArticle, userArticle):
+            return True #Return True meaning a circular ref
+
+    return False       
     
 
 
@@ -364,17 +377,10 @@ def displayUserMap(request, userpage):
                 'targetId': str(userArticle.id)
             })
 
-        mapData = json.dumps({
-            'nodes': nodes,
-            'links': links    
-        })
-
-        print(mapData)
-
-    # return HttpResponse(str({
-    #     'nodes': nodes,
-    #     'links': links    
-    # }))
+    mapData = json.dumps({
+        'nodes': nodes,
+        'links': links    
+    })
 
 
     return render(request, "displayUserMap.html", {
