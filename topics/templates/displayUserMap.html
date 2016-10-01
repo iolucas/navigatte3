@@ -1,0 +1,96 @@
+{% extends "user.html" %}
+
+{% load staticfiles %}
+
+{% block content-area %}
+<link rel="stylesheet" href="{% static 'css/box-container.css' %}"/>
+<link rel="stylesheet" href="{% static 'css/chart-style.css' %}"/>
+
+<h1><a href="{% url 'display_user_topics' userpage=userpage %}">Articles</a> | Map</h1>
+
+<svg class="svg-container" width="100%" height="100%">
+    <defs>
+
+        <linearGradient id="linGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#666;stop-opacity:.0" />
+            <stop offset="100%" style="stop-color:#bbb;stop-opacity:.5" />
+        </linearGradient>
+
+        <radialGradient id="radGrad" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+            <stop offset="0%" style="stop-color:rgb(255,255,255);stop-opacity:0" />
+            <stop offset="100%" style="stop-color:rgb(0,0,255);stop-opacity:1" />
+        </radialGradient>
+
+        <!-- Material Design Shadows -->
+
+        <filter id="md-shadow1" height="150%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="1"/> <!-- stdDeviation is how much to blur -->
+            <feOffset dx="0" dy="1" result="offsetblur"/> <!-- how much to offset -->
+            <feComponentTransfer>   
+                <feFuncA type="linear" slope=".4"/>
+            </feComponentTransfer>
+            <feMerge> 
+                <feMergeNode/> <!-- this contains the offset blurred image -->
+                <feMergeNode in="SourceGraphic"/> <!-- this contains the element that the filter is applied to -->
+            </feMerge>
+        </filter>
+
+        <filter id="md-shadow2" height="150%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="2"/> <!-- stdDeviation is how much to blur -->
+            <feOffset dx="0" dy="2" result="offsetblur"/> <!-- how much to offset -->
+            <feComponentTransfer>   
+                <feFuncA type="linear" slope=".4"/>
+            </feComponentTransfer>
+            <feMerge> 
+                <feMergeNode/> <!-- this contains the offset blurred image -->
+                <feMergeNode in="SourceGraphic"/> <!-- this contains the element that the filter is applied to -->
+            </feMerge>
+        </filter>
+
+        <filter id="md-shadow3" height="200%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="2"/> <!-- stdDeviation is how much to blur -->
+            <feOffset dx="0" dy="4" result="offsetblur"/> <!-- how much to offset -->
+            <feComponentTransfer>   
+                <feFuncA type="linear" slope=".4"/>
+            </feComponentTransfer>
+            <feMerge> 
+                <feMergeNode/> <!-- this contains the offset blurred image -->
+                <feMergeNode in="SourceGraphic"/> <!-- this contains the element that the filter is applied to -->
+            </feMerge>
+        </filter>
+
+
+
+    </defs>
+
+    <rect id="node-container-mouse-area" width="100%" height="100%"></rect>
+    <g id="block-container" nvgtt-block-container>
+
+    </g>
+</svg>
+
+<script src="{% static 'js/jquery-2.1.4.min.js' %}"></script>
+<script src="{% static 'js/d3.v3.min.js' %}"></script>
+
+<script src="{% static 'js/eventhandler.js' %}"></script>
+<script src="{% static 'js/g-query.js' %}"></script>
+
+<script src="{% static 'js/chart/nvgtt.js' %}"></script>
+<script src="{% static 'js/chart/nvgtt-container.js' %}"></script>
+<script src="{% static 'js/chart/nvgtt-blocks.js' %}"></script>
+<script src="{% static 'js/chart/nvgtt-links.js' %}"></script>
+<script src="{% static 'js/chart/nvgtt-select.js' %}"></script>
+<!--<script src="{% static 'js/chart/nvgtt-content.js' %}"></script>-->
+<script src="{% static 'js/chart/nvgtt-project.js' %}"></script>
+
+<script>
+    'use strict';
+
+    var mapDataStr = '{{mapData|safe}}';
+
+    NvgttChart.load(JSON.parse(mapDataStr));
+</script>
+
+
+
+{% endblock %}

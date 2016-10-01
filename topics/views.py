@@ -20,11 +20,13 @@ from django.core.urlresolvers import reverse
 from bs4 import BeautifulSoup
 import urllib.request
 
+import json
+
 
 # Create your views here.
 
 @login_required
-def addNewUserTopic(request, userpage):
+def addNewUserArticle(request, userpage):
 
     #ON POST
 
@@ -72,7 +74,7 @@ def addNewUserTopic(request, userpage):
     })
 
 
-def displayUserTopics(request, userpage):
+def displayUserArticles(request, userpage):
     #Check whether the user exists and get it
     try:
         userpageRef = User.objects.get_by_natural_key(username=userpage)
@@ -103,7 +105,7 @@ def displayUserArticlesDetails(request, userpage, articleId):
         #Render the page with the target data
         return render(request, 'displayUserArticlesDetails.html', { 
             'name': userWikiArticle,
-            'prereqs': userWikiArticle.preReqArticles.all(),    
+            'prereqs': userWikiArticle.preReqUserArticles.all(),    
             'articleId': articleId, 
             'userpage': userpage,
             'isOwner': userpageRef == request.user,         
@@ -215,8 +217,16 @@ def addUserArticlePreRequisite(request, userpage, articleId):
         if not prereqArticle:
             raise Exception("Invalid url passed to the query.")
 
+        #Verify if the user have the prereq article, if not, add it     
+        try:
+            prereqUserArticle = request.user.userwikiarticle_set.get(wikiArticle=prereqArticle, deleted=False)
+        except UserWikiArticle.DoesNotExist:
+            #If it does not exists, create it
+            prereqUserArticle = UserWikiArticle(wikiArticle=prereqArticle, createdBy=request.user)
+            prereqUserArticle.save()    
+
         #Add the article to the prereq list of the target user article
-        targetUserArticle.preReqArticles.add(prereqArticle)
+        targetUserArticle.preReqUserArticles.add(prereqUserArticle)
 
         return redirect(reverse('displayUserArticlesDetails', kwargs={'userpage': userpage, 'articleId':articleId}))
 
@@ -232,7 +242,7 @@ def addUserArticlePreRequisite(request, userpage, articleId):
     
 
 
-def userTopicDetails(request, userpage):
+def userArticleDetails(request, userpage):
     
     #Check whether the user exists and get it
     try:
@@ -266,7 +276,7 @@ def userTopicDetails(request, userpage):
 
 #View to handle subject delete
 @login_required
-def deleteUserTopic(request, userpage):
+def deleteUserArticle(request, userpage):
     if request.method != 'POST':
         return HttpResponse("Invalid Request")
 
@@ -292,83 +302,7 @@ def deleteUserTopic(request, userpage):
 
 
 
-@login_required
-def addUserTopicReference(request, userpage):
-    if not "subject_id" in request.POST:
-        return invalidRequest("Invalid reference add request. No subjectID in POST method.")
 
-    
-    subjectId = request.POST["subject_id"]
-
-    #Check if the subject_id is valid and belongs to this user
-    try:
-        targetSubject = UserTopic.objects.get(id=subjectId, owner=request.user)
-
-        #If the target object owner is not the current user, finish with error
-        #if request.user != targetSubject.owner:
-            #return invalidRequest("Invalid reference add request. The target user owner of the subject is not the authenticated user.")
-
-        #check which reference is being add
-        if "course_name" in request.POST and request.POST["course_name"]:
-            newCourse = CourseReference(name=request.POST["course_name"])
-            newCourse.save()
-            #Add the new course to the target subject
-            targetSubject.courses.add(newCourse)
-
-        elif "book_title" in request.POST and request.POST["book_title"]:
-            #Create new book (should be checked whether the desired exists before add a new)
-            newBook = BookReference(name=request.POST["book_title"])
-            newBook.save()
-            targetSubject.books.add(newBook)
-
-        elif "website_address" in request.POST and request.POST["website_address"]:
-            
-            #Try to get a reference to the address
-            try:
-                websiteRef = WebsiteReference.objects.get(address=request.POST["website_address"])
-                targetSubject.websites.add(websiteRef)
-            
-            except WebsiteReference.DoesNotExist:
-
-                #If it does not exists, create a new
-                try:
-                    #Get site data
-                    websiteData = urllib.request.urlopen(request.POST["website_address"]).read()
-
-                    #Parse site data to objects
-                    websiteObj = BeautifulSoup(websiteData)
-
-                    #Get a title if there is one on the page
-                    if not websiteObj.title or websiteObj.title.string == None:
-                        websiteName = request.POST["website_address"]
-                    else:
-                        websiteName = websiteObj.title.string
-
-                #If the url is invalid
-                except ValueError:
-                    return HttpResponse("Invalid URL.")
-
-                except Exception:
-                    #If we can not retrieve site url, set the site title as the url
-                    websiteName = request.POST["website_address"]
-
-                newWebsite = WebsiteReference(name=websiteName, address=request.POST["website_address"])
-                newWebsite.save()
-                targetSubject.websites.add(newWebsite)
-
-        else:
-            #If no valid reference, return error
-            return HttpResponse("Invalid reference add request (invalid reference).")
-
-        return redirect(reverse('user_topic_details', kwargs={'userpage': userpage}) + "?id=" + subjectId)
-
-    except Exception as e:
-        #return invalidRequest("Invalid reference add request. Exception: " + str(e))
-        raise e
-
-
-#View to handle subject reference delete
-#For now remove the reference from the subject, later set a remove flag and keeps record
 
 def deleteUserArticlePreRequisite(request, userpage, articleId):
     if request.method != 'POST':
@@ -385,10 +319,10 @@ def deleteUserArticlePreRequisite(request, userpage, articleId):
         userArticle = UserWikiArticle.objects.get(id=articleId, createdBy=request.user)
 
         #Get the prereq reference 
-        prereqArticle = WikiArticle.objects.get(id=prereqId)
+        prereqArticle = UserWikiArticle.objects.get(id=prereqId)
 
         #remove the reference from the subject
-        userArticle.preReqArticles.remove(prereqArticle)
+        userArticle.preReqUserArticles.remove(prereqArticle)
         
         #Save changes
         userArticle.save()
@@ -399,51 +333,55 @@ def deleteUserArticlePreRequisite(request, userpage, articleId):
         return invalidRequest("Error while deleting: " + str(e))
 
 
+def displayUserMap(request, userpage):
 
-def deleteUserTopicReference(request, userpage):
-    if request.method != 'POST':
-        return invalidRequest("Invalid request. POST method expected.")
-
-    if not validateEntries(request.POST, ["subject_id", "reference_type", "reference_id"]):
-        return invalidRequest("Invalid request. subject_id, reference_type or reference_id missing or not valid.")
-
-    subjectId = request.POST['subject_id']
-    referenceType = request.POST['reference_type']
-    referenceId = request.POST['reference_id']
-
+    #Check whether the target user exists and get it
     try:
-        #Get the target subject
-        targetSubject = UserTopic.objects.get(id=subjectId, owner=request.user)
+        userObj = User.objects.get_by_natural_key(username=userpage)
+    except: #If it does not exists, return not found
+        return HttpResponseNotFound("User not found.")
 
-        #Verifies if this subject does belongs to this user
-        #if request.user != targetSubject.owner:
-            #return invalidRequest("Invalid Delete. This subject does not belong to the signed in user.")
-        
-        #Get the target reference
-        if referenceType == "website":
-            targetReference = WebsiteReference.objects.get(id=referenceId)
-            #remove the reference from the subject
-            targetSubject.websites.remove(targetReference)
 
-        elif referenceType == "book":
-            targetReference = BookReference.objects.get(id=referenceId)
-            #remove the reference from the subject
-            targetSubject.books.remove(targetReference)
-        
-        elif referenceType == "course":
-            targetReference = CourseReference.objects.get(id=referenceId)
-            #remove the reference from the subject
-            targetSubject.courses.remove(targetReference)
-        else:
-            return invalidRequest("Invalid Delete. Invalid type: " + referenceType)
+    #preReqUserArticles
+    nodes = []
+    links = []
 
-        #save target subject
-        targetSubject.save()
+    #Iterate thry all the user WikiArticles of this user 
+    for userArticle in UserWikiArticle.objects.filter(createdBy=userObj):
+        nodes.append({
+            'name': str(userArticle),
+            'localId': str(userArticle.id),
+            'globalId': str(userArticle.id),
+            'x': 0,
+            'y': 0,
+            'bgcolor':'#b3b3ff',
+            'fgcolor':'#2d002d'
+        })
 
-        return redirect(reverse('user_topic_details', kwargs={'userpage': userpage}) + "?id=" + subjectId)
+        for prereq in userArticle.preReqUserArticles.all():
+            links.append({
+                'sourceId': str(prereq.id),
+                'targetId': str(userArticle.id)
+            })
 
-    except Exception as e:
-        return invalidRequest("Error while deleting: " + str(e))
+        mapData = json.dumps({
+            'nodes': nodes,
+            'links': links    
+        })
+
+        print(mapData)
+
+    # return HttpResponse(str({
+    #     'nodes': nodes,
+    #     'links': links    
+    # }))
+
+
+    return render(request, "displayUserMap.html", {
+        'userpage': userpage,
+        'mapData': mapData
+    })
+
 
 
 def getOrCreateArticleByUrl(url, lang, user):

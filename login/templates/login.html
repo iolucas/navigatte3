@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
-{% block content-area %}
-
+{% block main-content-area %}
+<section>
     <h1>Login</h1>
 
     {% if login_error %}
@@ -18,5 +18,6 @@
         <br><br>
         <input type="submit" value="Login" />
     </form>
+</section>
 
 {% endblock %}

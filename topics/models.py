@@ -127,6 +127,8 @@ class UserWikiArticle(MapsCommonFields):
     #Field to store the pre requisites articles for this user article
     preReqArticles = models.ManyToManyField(WikiArticle, related_name='prereqs')
 
+    preReqUserArticles = models.ManyToManyField("UserWikiArticle", related_name='prArticles')
+
     #Flag to be set when the user delete this field
     deleted = models.BooleanField(default=False)
 

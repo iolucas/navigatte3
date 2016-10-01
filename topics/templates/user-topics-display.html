@@ -1,11 +1,11 @@
-{% extends "base.html" %}
+{% extends "user.html" %}
 
 {% block content-area %}
 
-<h1>Topics</h1>
+<h1>Articles | <a href="{% url 'displayUserMap' userpage=userpage %}">Map</a></h1>
 
 {% if isOwner %}
-  <a href="{% url 'add_new_user_topic' userpage=userpage %}">+ Add New Topic</a>
+  <a href="{% url 'add_new_user_topic' userpage=userpage %}">+ Add New Article</a>
   <br>
 {% endif %}
 

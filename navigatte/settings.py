@@ -159,12 +159,12 @@ USE_TZ = True
 
 
 #static file directory inclusion
-#STATICFILES_DIRS = [
-    #os.path.join(BASE_DIR,'static'),
-#]
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR,'static'),
+]
 #Necessary for deploy on bluemix
 #For some reason, STATICFILES_DIRS does not work
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+#STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 STATIC_URL = '/static/'
 

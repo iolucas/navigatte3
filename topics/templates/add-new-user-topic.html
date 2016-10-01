@@ -1,8 +1,8 @@
-{% extends "base.html" %}
+{% extends "user.html" %}
 
 {% block content-area %}
 
-    <h1>Topics</h1>
+    <h1>Articles Search</h1>
 
     <form action="" method="get">
         <input type="text" name="search" value="" placeholder="Search...">
@@ -24,7 +24,7 @@
                 </form>
                 <br>
                 <span>{{topic.description}}</span><br>
-                <a href="{{topic.url}}" target="_blank">{{topic.url}}</a>
+                {% if False %}<a href="{{topic.url}}" target="_blank">{{topic.url}}</a>{% endif %}
             </div>
         {% endfor %}
     {% endif %}

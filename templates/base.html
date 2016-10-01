@@ -4,7 +4,7 @@
 
 <html>
 
-    <head>
+    <head>        
         <title>Navigatte</title>
         <style>
 
@@ -19,6 +19,19 @@
                 color: #84ffff;
                 height: 80px;
                 line-height: 80px;
+            }
+
+            .user-area {
+                background-color: #aaa;
+                height: 50px;
+                line-height: 50px;
+                padding: 5px;
+                text-align: center;
+            }
+
+            .user-area a {
+                color: #111;
+                font-size: 30px;
             }
 
             #logo {
@@ -71,12 +84,10 @@
             </span>
         </header>
 
-        <section>
-               
-            {% block content-area %}
-            {% endblock %}
+        {% block main-content-area %}
+        {% endblock %}
 
-        </section>
+
 
     </body>
 
