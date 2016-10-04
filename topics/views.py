@@ -73,6 +73,9 @@ def addNewUserArticle(request, userpage):
         'userpage': userpage
     })
 
+#must think about i18n
+#must prevent bad characters from username, aswell as protected ones such home
+#check why bad chars are crashing
 
 def displayUserArticles(request, userpage):
     #Check whether the user exists and get it
@@ -202,11 +205,13 @@ def addUserArticlePreRequisite(request, userpage, articleId):
         return invalidRequest("Invalid prereq add request. No prerequrl in POST method.")
 
     #Get target article url
-    prereqUrl = request.POST["prereqUrl"]
+    prereqUrl = unquote(request.POST["prereqUrl"])
 
     #Try to get the article reference passed on the current logged user
     try:
         targetUserArticle = request.user.userwikiarticle_set.get(id=articleId)
+
+        print(prereqUrl)
 
         #Get prereq article by its url 
         prereqArticle, created = getOrCreateArticleByUrl(prereqUrl, "en", request.user)
