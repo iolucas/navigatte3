@@ -50,5 +50,4 @@ Temporary Items
 *.pyc
 secretkey.py
 */migrations/
-static/
 /old_dbs
